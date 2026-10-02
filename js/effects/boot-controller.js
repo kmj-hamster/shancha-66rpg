@@ -150,8 +150,8 @@ class BootSequence {
 
 class ShutdownSequence {
   constructor(options = {}) {
-    this.preFadeDuration = options.preFadeDuration || 300
-    this.shrinkDuration = options.shrinkDuration || 800
+    this.preFadeDuration = options.preFadeDuration ?? 300
+    this.shrinkDuration = options.shrinkDuration ?? 800
     this.glowDuration = options.glowDuration || 1500
     this.overlayDelay = options.overlayDelay || 500
   }
@@ -167,10 +167,13 @@ class ShutdownSequence {
     }
 
     // 阶段1：内容淡出
-    appContainer.classList.add('app-pre-shutdown')
-    await this.delay(this.preFadeDuration)
+    if (this.preFadeDuration > 0) {
+      appContainer.classList.add('app-pre-shutdown')
+      await this.delay(this.preFadeDuration)
+    }
 
     // 阶段2：画面收缩
+    appContainer.style.setProperty('--shutdown-shrink-duration', this.shrinkDuration + 'ms')
     appContainer.classList.add('shutdown-active')
     await this.delay(this.shrinkDuration)
 
@@ -195,6 +198,7 @@ class ShutdownSequence {
 
     // 重置应用状态
     appContainer.classList.remove('app-pre-shutdown', 'shutdown-active')
+    appContainer.style.removeProperty('--shutdown-shrink-duration')
     appContainer.classList.add('app-hidden')
 
     // 返回覆盖层引用（可用于后续重启）

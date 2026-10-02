@@ -84,11 +84,11 @@ for (const lang of ['zh', 'en']) {
         assert.equal(h.run('endingCalls'), 0);
         button.onclick(); button.onclick();
         assert.equal(h.run('endingCalls'), 0);
-        h.run('memoryDecay.awakeningModal.children[0].children[1].children[1].onclick()');
+        h.run('memoryDecay.awakeningModal.children[0].children[2].children[1].onclick()');
         assert.equal(h.run('endingCalls'), 0);
         assert.equal(button.disabled, undefined);
         button.onclick();
-        h.run('var confirm = memoryDecay.awakeningModal.children[0].children[1].children[0]; confirm.onclick(); confirm.onclick()');
+        h.run('var confirm = memoryDecay.awakeningModal.children[0].children[2].children[0]; confirm.onclick(); confirm.onclick()');
         assert.equal(h.run('memoryDecay.awakeningModal'), null);
         assert.equal(h.run('endingCalls'), 1);
         assert.equal(button.disabled, true);
@@ -117,18 +117,20 @@ test('100% save restores the button; unrelated memories do not increase progress
 });
 
 
-test('confirmed ending shuts down, holds black for four seconds, then shows subtitles', async () => {
+test('confirmed ending shuts down, holds black for three seconds, then shows subtitles', async () => {
     const h = setup();
     await h.run(`
         var events = [];
-        window.ShutdownSequence = class { async start() { events.push('shutdown'); } };
+        window.ShutdownSequence = class { constructor(options) { window.shutdownOptions = options; } async start() { events.push('shutdown'); } };
         window.SubtitleSystem = class { show(text) { events.push(text); } };
         memoryDecay.delay = async ms => { events.push(ms); };
         memoryDecay.startEndingSequence = MemoryDecayEffect.prototype.startEndingSequence;
         memoryDecay.startEndingSequence();
     `);
-    assert.deepEqual(Array.from(h.run('events')), ['shutdown', 4000, '山茶？', 3600, '是你吗……珂赛特？', 5800]);
+    assert.deepEqual(Array.from(h.run('events')), ['shutdown', 3000, '山茶？', 3600, '是你吗……珂赛特？', 5800]);
     assert.equal(h.inputLine.querySelector('.awakening-button').disabled, true);
+    assert.equal(h.run('shutdownOptions.preFadeDuration'), 0);
+    assert.equal(h.run('shutdownOptions.shrinkDuration'), 600);
 });
 
 test('reading final memories in reverse order still reaches exactly 100 once each', () => {

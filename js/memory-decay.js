@@ -1133,14 +1133,19 @@ class MemoryDecayEffect {
         const overlay = document.createElement('div');
         overlay.className = 'reset-modal-overlay active';
         const modal = document.createElement('div');
-        modal.className = 'reset-modal';
+        modal.className = 'reset-modal awakening-modal';
         modal.setAttribute('role', 'dialog');
         modal.setAttribute('aria-modal', 'true');
         modal.setAttribute('aria-labelledby', 'awakening-confirm-title');
         const title = document.createElement('h2');
         title.id = 'awakening-confirm-title';
         title.className = 'awakening-confirm-title';
-        title.textContent = zh ? '唤醒戈尔' : 'Awaken Gregor';
+        title.textContent = 'MIND MIRROR';
+        const message = document.createElement('p');
+        message.className = 'reset-warning awakening-confirm-message';
+        message.id = 'awakening-confirm-message';
+        message.textContent = zh ? '确认要唤醒患者吗？' : 'Confirm awakening the patient?';
+        modal.setAttribute('aria-describedby', message.id);
         const actions = document.createElement('div');
         actions.className = 'reset-modal-buttons';
         const confirm = document.createElement('button');
@@ -1171,7 +1176,7 @@ class MemoryDecayEffect {
             this.startEndingSequence();
         };
         actions.append(confirm, cancel);
-        modal.append(title, actions);
+        modal.append(title, message, actions);
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
         this.awakeningModal = overlay;
@@ -1200,12 +1205,12 @@ class MemoryDecayEffect {
         // 1. 播放关机动画
         console.log('[Ending] Playing shutdown animation...');
         if (typeof ShutdownSequence !== 'undefined') {
-            const shutdownSeq = new ShutdownSequence();
+            const shutdownSeq = new ShutdownSequence({ preFadeDuration: 0, shrinkDuration: 600 });
             const overlay = await shutdownSeq.start();
             console.log('[Ending] Shutdown animation completed');
 
-            // 2. 关机后黑屏4秒（原3秒额外增加1秒），再显示第一条字幕
-            await this.delay(4000);
+            // 2. 关机后黑屏3秒，再显示第一条字幕
+            await this.delay(3000);
             console.log('[Ending] Showing first subtitle: Camellia?');
 
             // 本地化文本

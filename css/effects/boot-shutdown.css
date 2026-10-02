@@ -120,7 +120,7 @@
 
 /* 关机画面收缩效果 */
 .shutdown-active {
-  animation: shutdown-shrink 0.8s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+  animation: shutdown-shrink var(--shutdown-shrink-duration, 0.8s) cubic-bezier(0.4, 0, 0.6, 1) forwards;
   transform-origin: center center;
 }
 
