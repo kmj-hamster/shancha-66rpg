@@ -1003,3 +1003,10 @@ body.reading-mode .system-output {
     font-size: 16px;
   }
 }
+
+/* 最终阶段以唤醒按钮替换终端输入和光标。 */
+.awakening-input .command-input,
+.awakening-input .cursor-block { display: none !important; }
+.awakening-input .awakening-button { margin-left: 8px; }
+.awakening-button:disabled { opacity: .45; cursor: default; }
+.awakening-confirm-title { margin: 0 0 24px; font-family: inherit; font-size: 20px; font-weight: bold; text-align: center; }

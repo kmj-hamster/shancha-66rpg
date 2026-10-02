@@ -35,8 +35,8 @@ if (window.DEBUG_STORY_MODE) {
         title.textContent = '剧情测试 · 独立存档';
         panel.appendChild(title);
         for (const [target, label] of [
-            ['awakening', '重播复苏动画'], ['reading', '最终阅读 · 40%'],
-            ['reading90', '最终阅读 · 90%'], ['ready', '唤醒按钮 · 100%'],
+            ['awakening', '重播复苏动画'], ['reading', '最终阅读 · 37.92%'],
+            ['reading90', '最终阅读 · 89.34%'], ['ready', '唤醒按钮 · 100%'],
             ['ending', '直接播放结局'], [null, '退出测试，返回原存档']
         ]) {
             const button = document.createElement('button');

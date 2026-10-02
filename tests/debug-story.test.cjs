@@ -22,7 +22,7 @@ test('normal play has no debug panel and cannot seed a checkpoint', () => {
     assert.throws(() => h.run('seedDebugStory("ready")'));
     assert.equal(h.storage.get('gameState'), 'original save');
 });
-for (const [stage, phase, progress] of [['awakening','awakening',40], ['reading','final_reading',40], ['reading90','final_reading',90], ['ready','final_reading',100], ['ending','ending',100]]) {
+for (const [stage, phase, progress] of [['awakening','awakening',37.92], ['reading','final_reading',37.92], ['reading90','final_reading',89.34], ['ready','final_reading',100], ['ending','ending',100]]) {
     test(stage + ' checkpoint resumes with isolated progress and survives refresh', () => {
         const h = boot('?debug=1&debugStage=' + stage);
         h.run('var s = new GameState(); s.loadState()');

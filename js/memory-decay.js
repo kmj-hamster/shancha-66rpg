@@ -1110,17 +1110,72 @@ class MemoryDecayEffect {
             button.textContent = lang === 'zh' ? '唤醒戈尔' : 'Awaken Gregor';
             button.onclick = () => {
                 if (this.endingStarted || gameState.getAwakeningProgress() < 100) return;
-                this.endingStarted = true;
-                button.disabled = true;
-                this.startEndingSequence();
+                this.showAwakeningConfirmation(button);
             };
-            panel.append(label, bar, percent, button);
+            panel.append(label, bar, percent);
+            const inputLine = document.querySelector('.input-line');
+            if (inputLine) {
+                inputLine.classList.add('awakening-input');
+                inputLine.appendChild(button);
+            }
             container.appendChild(panel);
         }
         const progress = gameState.getAwakeningProgress();
-        panel.querySelector('.awakening-progress-blocks').textContent = '▮'.repeat(progress / 10);
-        panel.querySelector('.awakening-progress-percent').textContent = progress + '%';
-        panel.querySelector('.awakening-button').hidden = progress < 100;
+        panel.querySelector('.awakening-progress-blocks').textContent = '▮'.repeat(Math.round(progress / 10));
+        panel.querySelector('.awakening-progress-percent').textContent = progress.toFixed(2) + '%';
+        const button = document.querySelector('.input-line .awakening-button');
+        if (button) button.hidden = progress < 100;
+    }
+
+    showAwakeningConfirmation(button) {
+        if (this.awakeningModal || this.endingStarted) return;
+        const zh = localStorage.getItem('gameLang') === 'zh';
+        const overlay = document.createElement('div');
+        overlay.className = 'reset-modal-overlay active';
+        const modal = document.createElement('div');
+        modal.className = 'reset-modal';
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+        modal.setAttribute('aria-labelledby', 'awakening-confirm-title');
+        const title = document.createElement('h2');
+        title.id = 'awakening-confirm-title';
+        title.className = 'awakening-confirm-title';
+        title.textContent = zh ? '唤醒戈尔' : 'Awaken Gregor';
+        const actions = document.createElement('div');
+        actions.className = 'reset-modal-buttons';
+        const confirm = document.createElement('button');
+        confirm.className = 'reset-btn confirm';
+        confirm.textContent = zh ? '确认' : 'Confirm';
+        const cancel = document.createElement('button');
+        cancel.className = 'reset-btn cancel';
+        cancel.textContent = zh ? '取消' : 'Cancel';
+        const close = () => {
+            overlay.remove();
+            this.awakeningModal = null;
+            button.focus();
+        };
+        cancel.onclick = close;
+        overlay.onclick = event => { if (event.target === overlay) close(); };
+        overlay.onkeydown = event => {
+            if (event.key === 'Escape') close();
+            if (event.key === 'Tab') {
+                event.preventDefault();
+                (document.activeElement === confirm ? cancel : confirm).focus();
+            }
+        };
+        confirm.onclick = () => {
+            if (this.endingStarted) return;
+            close();
+            button.disabled = true;
+            this.endingStarted = true;
+            this.startEndingSequence();
+        };
+        actions.append(confirm, cancel);
+        modal.append(title, actions);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        this.awakeningModal = overlay;
+        confirm.focus();
     }
 
     /**
@@ -1131,6 +1186,8 @@ class MemoryDecayEffect {
         if (this.endingSequenceRunning) return;
         this.endingSequenceRunning = true;
         this.endingStarted = true;
+        const wakeButton = document.querySelector('.input-line .awakening-button');
+        if (wakeButton) wakeButton.disabled = true;
         gameState.advanceStoryPhase('ending');
         console.log('[Ending] Starting ending sequence...');
 
@@ -1147,8 +1204,8 @@ class MemoryDecayEffect {
             const overlay = await shutdownSeq.start();
             console.log('[Ending] Shutdown animation completed');
 
-            // 2. 等待3秒后显示第一条字幕
-            await this.delay(3000);
+            // 2. 关机后黑屏4秒（原3秒额外增加1秒），再显示第一条字幕
+            await this.delay(4000);
             console.log('[Ending] Showing first subtitle: Camellia?');
 
             // 本地化文本

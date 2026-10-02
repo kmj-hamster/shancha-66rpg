@@ -11,6 +11,8 @@ function getGameStorageKey(key) {
 // 存档版本号
 const SAVE_VERSION = '1.2.0';
 const AWAKENING_MEMORY_IDS = ['mem_026', 'mem_027', 'mem_028', 'mem_029', 'mem_031', 'mem_019'];
+// 百分之一为单位，避免浮点累加误差；六段记忆共贡献 62.08%。
+const AWAKENING_WEIGHTS = [983, 1127, 876, 1209, 947, 1066];
 const STORY_PHASES = ['exploration', 'deletion1', 'after_deletion1', 'deletion2',
     'decay', 'final_memory', 'awakening', 'final_reading', 'ending', 'ended'];
 
@@ -648,8 +650,9 @@ class GameState {
     }
 
     getAwakeningProgress() {
-        const count = AWAKENING_MEMORY_IDS.filter(id => this.state.read_cards.includes(id)).length;
-        return 40 + count * 10;
+        const earned = AWAKENING_MEMORY_IDS.reduce((sum, id, index) =>
+            sum + (this.state.read_cards.includes(id) ? AWAKENING_WEIGHTS[index] : 0), 3792);
+        return earned / 100;
     }
 
     getStoryPhase() {

@@ -184,7 +184,7 @@ for (const [saved, phase] of [
         const h = boot(saved);
         assert.equal(h.save().story_phase, phase);
         assert.equal(boot(h.save()).save().story_phase, phase);
-        if (phase === 'final_reading') assert.equal(h.run('gameState.getAwakeningProgress()'), 50);
+        if (phase === 'final_reading') assert.equal(h.run('gameState.getAwakeningProgress()'), 47.75);
     });
 }
 
@@ -210,14 +210,14 @@ test('awakening animation records its boundary and preserves progress on repeate
         AwakeningAnimation = class { constructor(options) { this.options = options; } run() { window.animation = this; } };
         memoryDecay.triggerAwakeningSequence();`);
     assert.equal(h.save().story_phase, 'awakening');
-    assert.equal(h.run('gameState.getAwakeningProgress()'), 40);
+    assert.equal(h.run('gameState.getAwakeningProgress()'), 37.92);
     assert.equal(h.save().discovered_cards.includes('mem_033'), false);
     h.run('animation.options.onComplete()');
     assert.equal(h.save().story_phase, 'final_reading');
     h.run("gameState.markCardAsRead('mem_026')");
     const restored = boot(h.save());
     restored.run('gameState.beginAwakening()');
-    assert.equal(restored.run('gameState.getAwakeningProgress()'), 50);
+    assert.equal(restored.run('gameState.getAwakeningProgress()'), 47.75);
 });
 
 test('ending is checkpointed before playback, shown once, and persisted as completed', async () => {
