@@ -4,11 +4,14 @@
  */
 
 // 存档版本号
-const SAVE_VERSION = '1.1.0';
+const SAVE_VERSION = '1.2.0';
 const AWAKENING_MEMORY_IDS = ['mem_026', 'mem_027', 'mem_028', 'mem_029', 'mem_031', 'mem_019'];
+const STORY_PHASES = ['exploration', 'deletion1', 'after_deletion1', 'deletion2',
+    'decay', 'final_memory', 'awakening', 'final_reading', 'ending', 'ended'];
 
 // 默认状态模板（用于补全缺失字段）
 const DEFAULT_STATE = {
+    story_phase: null,
     awakening_started: false,
     // 卡片相关状态
     discovered_cards: [],
@@ -53,6 +56,7 @@ class GameState {
      */
     initializeState() {
         this.state = {
+            story_phase: 'exploration',
             awakening_started: false,
             // 卡片相关状态
             discovered_cards: [],      // 已发现的卡片ID列表
@@ -414,7 +418,7 @@ class GameState {
 
             // 合并默认值（补全缺失字段）+ 加载的状态
             this.state = {
-                ...DEFAULT_STATE,
+                ...JSON.parse(JSON.stringify(DEFAULT_STATE)),
                 ...loaded,
                 // 强制重置临时状态
                 is_reading: false,
@@ -485,6 +489,7 @@ class GameState {
             this.state.delete_stage = 'inactive';
         }
         this.reconcileDeleteProgress();
+        this.reconcileStoryProgress();
 
         // 确保 notes 是对象
         if (typeof this.state.notes !== 'object' || this.state.notes === null) {
@@ -633,12 +638,117 @@ class GameState {
         this.state.total_discovered = this.state.discovered_cards.length;
         this.state.current_tab = 'memory';
         this.state.show_year = true;
+        this.advanceStoryPhase('awakening', false);
         this.saveState();
     }
 
     getAwakeningProgress() {
         const count = AWAKENING_MEMORY_IDS.filter(id => this.state.read_cards.includes(id)).length;
         return 40 + count * 10;
+    }
+
+    getStoryPhase() {
+        return this.state.story_phase || 'exploration';
+    }
+
+    advanceStoryPhase(phase, save = true) {
+        if (!STORY_PHASES.includes(phase)) return;
+        if (STORY_PHASES.indexOf(phase) > STORY_PHASES.indexOf(this.getStoryPhase())) {
+            this.state.story_phase = phase;
+        }
+        this.reconcileStoryProgress();
+        if (save) this.saveState();
+    }
+
+    // 不依赖动画定时器的持久化结果，可重复执行而不重置阅读进度。
+    reconcileStoryProgress() {
+        const s = this.state;
+        const reveal = id => {
+            if (!s.discovered_cards.includes(id)) s.discovered_cards.push(id);
+            if (!s.unlocked_cards.includes(id)) s.unlocked_cards.push(id);
+        };
+        if (!STORY_PHASES.includes(s.story_phase)) {
+            if (s.game_completed) s.story_phase = 'ended';
+            else if (s.awakening_started) s.story_phase = 'final_reading';
+            else if (AWAKENING_MEMORY_IDS.some(id => id !== 'mem_019' && s.discovered_cards.includes(id))) {
+                s.story_phase = 'final_reading';
+                s.awakening_started = true;
+            } else if (s.read_cards.includes('mem_025')) s.story_phase = 'awakening';
+            else if (s.discovered_cards.includes('mem_025')) s.story_phase = 'final_memory';
+            else if (s.deletion2_completed) s.story_phase = 'decay';
+            else if (s.deletion1_completed || s.read_cards.includes('file_016') ||
+                s.unlocked_commands.includes('/delete word')) s.story_phase = 'after_deletion1';
+            else s.story_phase = 'exploration';
+        }
+        const atLeast = phase => STORY_PHASES.indexOf(s.story_phase) >= STORY_PHASES.indexOf(phase);
+        if (s.deletion1_completed || atLeast('after_deletion1')) {
+            s.deletion1_completed = true;
+            reveal('file_016');
+        }
+        if (s.deletion2_completed || atLeast('decay')) s.deletion2_completed = true;
+        if (atLeast('final_memory')) reveal('mem_025');
+        if (s.awakening_started || atLeast('final_reading')) {
+            s.awakening_started = true;
+            AWAKENING_MEMORY_IDS.forEach(reveal);
+            s.show_year = true;
+        }
+        if (atLeast('ended')) s.game_completed = true;
+        s.total_discovered = s.discovered_cards.length;
+        this.reconcileDeleteProgress();
+    }
+
+    /** 根据已保存的事实补齐派生解锁；问答仅发现，不跳过答案校验。 */
+    reconcileProgress(cards, commandMap) {
+        const s = this.state;
+        const byId = new Map(cards.map(card => [card.id, card]));
+        const add = (field, value) => { if (!s[field].includes(value)) s[field].push(value); };
+        for (const field of ['discovered_cards', 'unlocked_cards', 'read_cards', 'blue_marked_cards', 'preview_shown_cards']) {
+            s[field] = [...new Set(s[field].filter(id => byId.has(id)))];
+        }
+        // 不将问答预览或异常的已读标记误当作回答正确。
+        s.read_cards = s.read_cards.filter(id => byId.get(id).unlock_type !== 'question' || s.unlocked_cards.includes(id));
+        for (const id of s.read_cards) {
+            add('discovered_cards', id);
+            add('unlocked_cards', id);
+            for (const command of commandMap[id] || []) add('unlocked_commands', command);
+            const card = byId.get(id);
+            const clues = [...(card.new_clues || []), ...(card.content || [])
+                .filter(segment => segment.style === 'clue' && segment.text)
+                .map(segment => segment.text.replace(/[.,!?]/g, ''))];
+            for (const clue of clues) {
+                const normalized = clue.toLowerCase().trim();
+                if (normalized) add('discovered_clues', normalized);
+            }
+        }
+        if (s.sort_year_used) {
+            add('discovered_cards', 'mem_024');
+            add('unlocked_cards', 'mem_024');
+        }
+        for (const card of cards.filter(card => card.type === 'file')) {
+            const parents = Array.isArray(card.unlock_by) ? card.unlock_by : [card.unlock_by].filter(Boolean);
+            if (!parents.length || parents.some(id => s.read_cards.includes(id))) add('discovered_cards', card.id);
+        }
+        for (const id of s.unlocked_cards) add('discovered_cards', id);
+        const count = s.discovered_cards.filter(id => byId.get(id)?.type === 'memory').length;
+        for (const id of s.discovered_cards) {
+            const card = byId.get(id);
+            if (card?.unlock_type === 'direct' ||
+                (card?.unlock_type === 'count' && count >= card.unlock_condition.required_cards)) {
+                add('unlocked_cards', id);
+            }
+        }
+        this.reconcileStoryProgress();
+    }
+
+    /** 阅读完成及其派生解锁在同一份存档中提交。 */
+    completeCardReading(cardId, cards, commandMap) {
+        const card = cards.find(card => card.id === cardId);
+        if (!card || !this.isCardUnlocked(cardId)) return false;
+        if (!this.state.read_cards.includes(cardId)) this.state.read_cards.push(cardId);
+        if (cardId === 'mem_025') this.advanceStoryPhase('awakening', false);
+        this.reconcileProgress(cards, commandMap);
+        this.saveState();
+        return true;
     }
 
     /**
@@ -714,7 +824,7 @@ class GameState {
      */
     setDeletion1Completed() {
         this.state.deletion1_completed = true;
-        this.saveState();
+        this.advanceStoryPhase('after_deletion1');
     }
 
     /**
@@ -722,7 +832,7 @@ class GameState {
      */
     setDeletion2Completed() {
         this.state.deletion2_completed = true;
-        this.saveState();
+        this.advanceStoryPhase('decay');
     }
 
     /**

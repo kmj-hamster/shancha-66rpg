@@ -511,6 +511,7 @@ class MemoryDecayEffect {
 
         this.isActive = true;
         this.startTime = Date.now();
+        gameState.advanceStoryPhase('decay');
 
         // 功能1: 禁用阅读锁定机制（decay期间点击卡片不锁定）
         this.bypassReadingLock();
@@ -815,6 +816,12 @@ class MemoryDecayEffect {
      */
     unlockMem025Sequence() {
         console.log('🔓 Starting mem_025 unlock sequence...');
+        const isNewMemory = !gameState.isCardDiscovered('mem_025');
+        // 保存解锁与阶段；独立读档恢复也应只显示这一张记忆。
+        gameState.advanceStoryPhase('final_memory');
+        this.hiddenCards = new Set(cardManager.getAllCards()
+            .filter(card => card.id !== 'mem_025').map(card => card.id));
+        this.disableTerminal();
 
         // 停止glitch效果
         if (this.glitchTimer) {
@@ -837,26 +844,11 @@ class MemoryDecayEffect {
         this.hiddenCards.delete('mem_025');
         console.log('🔓 mem_025 removed from hidden cards');
 
-        // 强制发现并解锁mem_025
-        if (typeof gameState !== 'undefined' && typeof cardManager !== 'undefined') {
-            // 发现卡片
-            if (!gameState.isCardDiscovered('mem_025')) {
-                gameState.discoverCard('mem_025');
-                cardManager.updateCardDiscoveredStatus('mem_025', true);
-                console.log('🔓 mem_025 discovered');
-
-                // 🎵 播放发现音效
-                if (window.audioManager) {
-                    audioManager.playSFX('discover', 0.5, true);
-                }
-            }
-
-            // 解锁卡片
-            if (!gameState.isCardUnlocked('mem_025')) {
-                gameState.unlockCard('mem_025');
-                cardManager.updateCardStatus('mem_025', 'unlocked');
-                console.log('🔓 mem_025 unlocked');
-            }
+        // 检查点已记录发现和解锁，同步当前卡片实例。
+        cardManager.updateCardDiscoveredStatus('mem_025', true);
+        cardManager.updateCardStatus('mem_025', 'unlocked');
+        if (isNewMemory && window.audioManager) {
+            audioManager.playSFX('discover', 0.5, true);
         }
 
         // 切换到memory tab
@@ -966,6 +958,8 @@ class MemoryDecayEffect {
      * 触发苏醒动画序列（mem_025阅读完成后调用）
      */
     triggerAwakeningSequence() {
+        if (this.awakeningAnimationRunning) return;
+        this.awakeningAnimationRunning = true;
         console.log('🌅 Starting awakening sequence...');
         gameState.beginAwakening();
 
@@ -1011,6 +1005,8 @@ class MemoryDecayEffect {
             const awakening = new AwakeningAnimation({
                 finalMemories: AWAKENING_MEMORY_IDS.map(id => cardManager.getCardById(id).title),
                 onComplete: () => {
+                    this.awakeningAnimationRunning = false;
+                    gameState.advanceStoryPhase('final_reading');
                     console.log('✅ Awakening animation completed');
                     console.log('🌅 Player can now read the 6 final memories');
 
@@ -1041,6 +1037,7 @@ class MemoryDecayEffect {
             setTimeout(() => this.startAwakeningProgress(), 2000);
         } else {
             console.warn('[Awakening] AwakeningAnimation class not found');
+            this.awakeningAnimationRunning = false;
         }
 
         console.log('✅ Awakening sequence initialized');
@@ -1131,6 +1128,10 @@ class MemoryDecayEffect {
      * 关机动画 -> 字幕 -> 结束界面
      */
     async startEndingSequence() {
+        if (this.endingSequenceRunning) return;
+        this.endingSequenceRunning = true;
+        this.endingStarted = true;
+        gameState.advanceStoryPhase('ending');
         console.log('[Ending] Starting ending sequence...');
 
         // 🎵 淡出Heartache BGM（2秒）

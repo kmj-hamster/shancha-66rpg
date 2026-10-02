@@ -396,71 +396,50 @@ class Renderer {
      * @param {HTMLElement} container - 文本容器
      * @param {Object} card - 卡片对象
      */
-    setupLineByLineDisplay(container, card = null) {
-        const paragraphs = container.querySelectorAll('.content-paragraph');
-
-        // 创建逐行显示控制器，传递card
-        this.lineByLineController = new LineByLineController(paragraphs, card);
-
-        // 添加继续提示
-        const continueHint = document.createElement('p');
-        continueHint.className = 'continue-hint';
-        continueHint.innerHTML = 'Click to continue';
-        container.appendChild(continueHint);
-
-        // 添加点击事件
-        container.addEventListener('click', () => {
-            // 如果是全自动播放模式，忽略用户点击
-            if (this.lineByLineController.fullAutoPlayMode) {
-                console.log('[LineByLine] Full auto-play mode, ignoring user click');
-                return;
-            }
-
-            this.lineByLineController.showNext();
-
-            // 如果全部显示完成，隐藏提示
-            if (this.lineByLineController.isComplete()) {
-                continueHint.style.display = 'none';
-                // 🔧 检查是否是预览模式（通过 onPreviewComplete 回调判断）
-                // 预览模式下不触发阅读完成，等待问答完成后再触发
-                if (!this.lineByLineController.onPreviewComplete) {
-                    // 只有非预览模式才触发阅读完成回调
-                    this.triggerReadingComplete();
-                }
-            }
-        });
-
-        // 添加键盘事件（Enter键和ESC键）
-        const handleKeyboard = (e) => {
-            if (!e.target.matches('input, textarea')) {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-
-                    // 如果是全自动播放模式，忽略用户Enter键
-                    if (this.lineByLineController.fullAutoPlayMode) {
-                        console.log('[LineByLine] Full auto-play mode, ignoring user Enter key');
-                        return;
-                    }
-
-                    this.lineByLineController.showNext();
-
-                    if (this.lineByLineController.isComplete()) {
-                        continueHint.style.display = 'none';
-                        document.removeEventListener('keydown', handleKeyboard);
-                        // 🔧 检查是否是预览模式（通过 onPreviewComplete 回调判断）
-                        // 预览模式下不触发阅读完成，等待问答完成后再触发
-                        if (!this.lineByLineController.onPreviewComplete) {
-                            // 只有非预览模式才触发阅读完成回调
-                            this.triggerReadingComplete();
-                        }
-                    }
-                } else if (e.key === 'Escape' && this.lineByLineController.isAutoPlaying) {
-                    e.preventDefault();
-                    this.lineByLineController.skipAutoSequence();
-                }
+    createReadingController(paragraphs, card) {
+        if (this.lineByLineController) this.lineByLineController.dispose();
+        const controller = new LineByLineController(paragraphs, card);
+        this.lineByLineController = controller;
+        this.readingCompletionDelivered = false;
+        controller.onComplete = () => {
+            if (this.lineByLineController === controller && this.currentCardId === card.id) {
+                this.triggerReadingComplete();
             }
         };
-        document.addEventListener('keydown', handleKeyboard);
+        return controller;
+    }
+
+    setupLineByLineDisplay(container, card) {
+        const controller = this.createReadingController(container.querySelectorAll('.content-paragraph'), card);
+        const continueHint = document.createElement('p');
+        continueHint.className = 'continue-hint';
+        continueHint.textContent = 'Click to continue';
+        container.appendChild(continueHint);
+        this.bindReadingControls(container, continueHint, controller);
+    }
+
+    bindReadingControls(container, continueHint, controller) {
+        const advance = () => {
+            if (this.lineByLineController !== controller || controller.disposed || controller.fullAutoPlayMode) return;
+            controller.showNext();
+            if (controller.isComplete()) continueHint.style.display = 'none';
+        };
+        const keyboard = event => {
+            if (this.lineByLineController !== controller || controller.disposed || event.target.matches('input, textarea')) return;
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                advance();
+            } else if (event.key === 'Escape' && controller.isAutoPlaying) {
+                event.preventDefault();
+                controller.skipAutoSequence();
+            }
+        };
+        container.addEventListener('click', advance);
+        document.addEventListener('keydown', keyboard);
+        controller.cleanupInputEvents = () => {
+            container.removeEventListener('click', advance);
+            document.removeEventListener('keydown', keyboard);
+        };
     }
 
     /**
@@ -612,48 +591,12 @@ class Renderer {
      * 触发阅读完成
      */
     triggerReadingComplete() {
+        const controller = this.lineByLineController;
+        if (this.readingCompletionDelivered || !controller || controller.disposed ||
+            controller.onPreviewComplete || !controller.isComplete()) return;
         if (this.readingCompleteCallback && this.currentCardId) {
+            this.readingCompletionDelivered = true;
             this.readingCompleteCallback(this.currentCardId);
-
-            // 🔧 检查当前卡片状态，如果是 partial（预览模式），不触发解锁
-            const card = window.cardManager && window.cardManager.getCardById(this.currentCardId);
-            if (card && card.status === 'partial') {
-                return;
-            }
-
-            // 检查是否有file被阅读触发解锁
-            if (typeof unlockManager !== 'undefined' && unlockManager) {
-                const unlockedFiles = unlockManager.checkReadTriggeredUnlocks(this.currentCardId);
-
-                // ⭐ 如果有新file被解锁，延迟刷新UI确保状态完全更新
-                if (unlockedFiles && unlockedFiles.length > 0) {
-                    setTimeout(() => {
-                        // 自动切换到 File tab
-                        if (typeof gameState !== 'undefined' && gameState) {
-                            gameState.setTab('file');
-                        }
-                        // 更新Tab按钮的视觉状态
-                        document.querySelectorAll('.tab-btn').forEach(btn => {
-                            btn.classList.remove('active');
-                            if (btn.getAttribute('data-type') === 'file') {
-                                btn.classList.add('active');
-                            }
-                        });
-
-                        if (typeof refreshUI === 'function') {
-                            refreshUI();
-                        } else if (typeof window.refreshUI === 'function') {
-                            window.refreshUI();
-                        } else {
-                            console.warn('[Renderer] refreshUI function not found');
-                        }
-                        // 触发解锁闪烁效果
-                        if (typeof window.triggerUnlockFlash === 'function') {
-                            window.triggerUnlockFlash(unlockedFiles);
-                        }
-                    }, 100);  // 100ms延迟确保状态完全更新
-                }
-            }
         }
     }
 
@@ -662,6 +605,8 @@ class Renderer {
      * @param {string} cardId - 卡片ID
      */
     setCurrentCard(cardId) {
+        if (this.lineByLineController) this.lineByLineController.dispose();
+        this.readingCompletionDelivered = false;
         this.currentCardId = cardId;
     }
 
@@ -1143,6 +1088,7 @@ class LineByLineController {
             // 立即检查第一段是否是自动序列
             if (this.paragraphs[0].dataset.isAutoSequence === 'true') {
                 // 延迟触发，让UI先渲染
+                this.currentIndex = -1;
                 setTimeout(() => this.showNext(), 100);
             }
         }
@@ -1174,6 +1120,7 @@ class LineByLineController {
     }
 
     showNext() {
+        if (this.disposed) return;
         // 50ms 节流，防止多个监听器同时调用导致重复执行
         const now = Date.now();
         if (this.lastShowNextTime && now - this.lastShowNextTime < 50) {
@@ -1182,6 +1129,7 @@ class LineByLineController {
         this.lastShowNextTime = now;
 
         if (this.complete) {
+            this.notifyCompletion();
             return;
         }
 
@@ -1213,12 +1161,7 @@ class LineByLineController {
                 }
             }
 
-            // 触发预览完成回调（用于显示问答UI）
-            if (this.onPreviewComplete) {
-                setTimeout(() => {
-                    this.onPreviewComplete();
-                }, 100);
-            }
+            this.notifyCompletion();
             return;
         }
 
@@ -1308,7 +1251,7 @@ class LineByLineController {
             }
 
         // 🔧 显示段落后，检查是否已经是最后一段
-        if (this.currentIndex === this.paragraphs.length - 1) {
+        if (!this.isAutoPlaying && !this.blockInput && this.currentIndex === this.paragraphs.length - 1) {
             this.complete = true;
 
             // 如果是全自动播放模式，解除锁定并恢复提示
@@ -1322,12 +1265,7 @@ class LineByLineController {
                 }
             }
 
-            // 触发预览完成回调（用于显示问答UI）
-            if (this.onPreviewComplete) {
-                setTimeout(() => {
-                    this.onPreviewComplete();
-                }, 100);
-            }
+            this.notifyCompletion();
         }
     }
 
@@ -1352,6 +1290,7 @@ class LineByLineController {
      * 播放下一个自动段落
      */
     playNextAuto(delay) {
+        if (this.disposed) return;
         if (this.autoPlayQueue.length === 0) {
             // 序列播放完毕
             this.isAutoPlaying = false;
@@ -1365,6 +1304,7 @@ class LineByLineController {
             }
 
             // 继续正常的下一段显示
+            this.lastShowNextTime = 0;
             this.showNext();
             return;
         }
@@ -1549,6 +1489,7 @@ class LineByLineController {
             this.hideAutoPlayIndicator();
 
             // 继续正常流程
+            this.lastShowNextTime = 0;
             this.showNext();
         }
     }
@@ -1566,13 +1507,30 @@ class LineByLineController {
             p.style.display = 'block';
         });
         this.complete = true;
+        this.notifyCompletion();
+    }
+
+    notifyCompletion() {
+        if (this.disposed || this.completionNotified || !this.isComplete()) return;
+        this.completionNotified = true;
+        if (this.onPreviewComplete) {
+            setTimeout(() => { if (!this.disposed) this.onPreviewComplete(); }, 100);
+        } else if (this.onComplete) {
+            this.onComplete();
+        }
+    }
+
+    dispose() {
+        this.disposed = true;
+        if (this.autoPlayTimer) clearTimeout(this.autoPlayTimer);
+        if (this.cleanupInputEvents) this.cleanupInputEvents();
     }
 
     /**
      * 是否已完成
      */
     isComplete() {
-        return this.complete || this.currentIndex >= this.paragraphs.length - 1;
+        return !this.disposed && !this.isAutoPlaying && !this.blockInput && this.complete;
     }
 }
 

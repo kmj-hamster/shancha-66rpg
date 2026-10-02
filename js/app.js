@@ -452,6 +452,9 @@ async function initApp() {
 
     // 尝试从localStorage加载游戏状态
     const hasState = gameState.loadState();
+    gameState.addClues(cardManager.getInitialClues());
+    gameState.reconcileProgress(cardManager.getAllCards(), COMMAND_UNLOCK_MAP);
+    gameState.saveState();
 
     if (hasState) {
         // ========== 存档恢复流程 ==========
@@ -513,13 +516,7 @@ async function initApp() {
     // 🔧 重置current_card状态，让用户重新选择要查看的内容
     gameState.setCurrentCard(null);
 
-    // 读档后恢复最终阅读阶段及进度，不再依赖演出中的临时定时器。
-    if (gameState.isDeletion2Completed() && gameState.isCardRead('mem_025')) {
-        gameState.beginAwakening();
-    }
-    if (gameState.getState().awakening_started && memoryDecay) {
-        memoryDecay.startAwakeningProgress();
-    }
+    resumeStoryPhase();
 
     console.log('✅ Game initialized successfully!');
 }
@@ -1480,7 +1477,7 @@ function handleFileClick(event) {
     }
 
     // 获取卡片
-    const card = cardManager.getCardById(cardId);
+    let card = cardManager.getCardById(cardId);
     if (!card) return;
 
     // 检查卡片状态并处理解锁
@@ -1508,20 +1505,6 @@ function handleFileClick(event) {
     // 显示卡片内容
     displayCard(card);
 
-    // 标记为已读（只有完全解锁的卡片才标记为已读）
-    // 问答卡片和删除说明需等逐行阅读完成后再标记，避免中途退出留下半完成进度。
-    if (card.status === 'unlocked' &&
-        !gameState.isCardRead(cardId) &&
-        card.unlock_type !== 'question' &&
-        cardId !== 'file_015' && cardId !== 'file_016' && cardId !== 'mem_025' &&
-        !(gameState.getState().awakening_started && AWAKENING_MEMORY_IDS.includes(cardId))) {
-        gameState.markCardAsRead(cardId);
-        cardManager.updateCardReadStatus(cardId, true);
-
-        // 检查并解锁指令
-        checkAndUnlockCommands(cardId);
-    }
-
     // 如果是蓝色标记的卡片，点击后移除蓝色标记
     if (gameState.isBlueMarked(cardId)) {
         gameState.removeBlueMarked(cardId);
@@ -1539,6 +1522,63 @@ function handleFileClick(event) {
 
     // 刷新UI（读文件时列表不滚动）
     refreshUI(false);
+}
+
+/** 所有完整阅读（点击、回车、自动段落）共用的提交入口。 */
+function completeCardReading(cardId) {
+    const card = cardManager.getCardById(cardId);
+    if (!card || card.status !== 'unlocked' || gameState.isCardRead(cardId)) return;
+    const discoveredBefore = new Set(gameState.getState().discovered_cards);
+    if (!gameState.completeCardReading(cardId, cardManager.getAllCards(), COMMAND_UNLOCK_MAP)) return;
+    syncStateToCardManager();
+
+    if (cardId === 'mem_025' && memoryDecay && !window._awakeningTriggered) {
+        window._awakeningTriggered = true;
+        // 检查点已保存；这四秒只保留阅读最后一句的停顿。
+        setTimeout(() => {
+            if (readingLockManager) readingLockManager.unlock();
+            memoryDecay.triggerAwakeningSequence();
+        }, 4000);
+        return;
+    }
+    if (readingLockManager) readingLockManager.unlock();
+    if (cardId === 'file_010' && window.ecgController && !window._ecgStarted) {
+        window._ecgStarted = true;
+        window.ecgController.start();
+    }
+    const files = gameState.getState().discovered_cards
+        .filter(id => !discoveredBefore.has(id))
+        .map(id => cardManager.getCardById(id)).filter(card => card && card.type === 'file');
+    if (files.length && !gameState.getState().awakening_started) {
+        gameState.setTab('file');
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.type === 'file');
+        });
+        files.forEach(file => unlockManager.notifyFileUnlock(file));
+    }
+    refreshUI();
+}
+
+/** 只重播未完成的演出，已完成的解锁由存档恢复阶段补齐。 */
+function resumeStoryPhase() {
+    switch (gameState.getStoryPhase()) {
+        case 'deletion1': playDeletionAnimation1(); break;
+        case 'deletion2': playDeletionAnimation2(); break;
+        case 'decay': if (memoryDecay) memoryDecay.start(); break;
+        case 'final_memory': if (memoryDecay) memoryDecay.unlockMem025Sequence(); break;
+        case 'awakening': if (memoryDecay) memoryDecay.triggerAwakeningSequence(); break;
+        case 'final_reading': if (memoryDecay) memoryDecay.startAwakeningProgress(); break;
+        case 'ending':
+            if (memoryDecay) {
+                memoryDecay.startAwakeningProgress();
+                memoryDecay.endingStarted = true;
+                memoryDecay.startEndingSequence();
+            }
+            break;
+        case 'ended':
+            if (typeof EndingScreen !== 'undefined') new EndingScreen().show();
+            break;
+    }
 }
 
 /**
@@ -1604,83 +1644,10 @@ function displayCard(card) {
         updateCardYearP3(card);
     }
 
-    // 如果是未读的已解锁卡片，启用阅读锁定
-    const shouldLock = card.status === 'unlocked' && !card.is_read;
-    if (shouldLock && readingLockManager) {
+    // 阅读完成统一提交；预览只展示问题，不提交已读。
+    renderer.onReadingComplete(completeCardReading);
+    if (card.status === 'unlocked' && !card.is_read && readingLockManager) {
         readingLockManager.lock(card.id);
-
-        // 设置阅读完成回调
-        renderer.onReadingComplete((completedCardId) => {
-
-            // 特殊处理：mem_025 阅读完成后触发苏醒动画序列
-            if (completedCardId === 'mem_025') {
-                // 防止重复触发（点击事件监听器未移除可能导致多次回调）
-                if (window._awakeningTriggered) {
-                    console.log('[Awakening] Already triggered, ignoring duplicate call');
-                    return;
-                }
-                window._awakeningTriggered = true;
-
-                console.log('[Awakening] mem_025 reading completed, triggering awakening sequence');
-
-                // 标记为已读
-                if (!gameState.isCardRead(completedCardId)) {
-                    gameState.markCardAsRead(completedCardId);
-                    cardManager.updateCardReadStatus(completedCardId, true);
-
-                    // 检查并解锁指令
-                    checkAndUnlockCommands(completedCardId);
-                }
-
-                // 触发苏醒动画序列（延迟4秒，让用户看到最后一行"…Carol"）
-                // 保持阅读锁定状态直到动画开始
-                if (typeof memoryDecay !== 'undefined' && memoryDecay) {
-                    setTimeout(() => {
-                        // 解锁阅读模式（恢复输入框和列表点击）
-                        if (readingLockManager) {
-                            readingLockManager.unlock();
-                        }
-                        memoryDecay.triggerAwakeningSequence();
-                    }, 4000);
-                } else {
-                    // 如果没有memoryDecay，立即解锁
-                    if (readingLockManager) {
-                        readingLockManager.unlock();
-                    }
-                }
-
-                return; // 不执行下面的通用逻辑
-            }
-
-            // 解锁阅读模式
-            if (readingLockManager) {
-                readingLockManager.unlock();
-            }
-
-            // 标记为已读
-            if (!gameState.isCardRead(completedCardId)) {
-                gameState.markCardAsRead(completedCardId);
-
-                // 检查并解锁指令
-                checkAndUnlockCommands(completedCardId);
-            }
-            // unlock() 也会保存已读状态，仍需同步卡片，避免重复逐行播放。
-            cardManager.updateCardReadStatus(completedCardId, true);
-
-            // 阅读 file_010 (README) 后 1 秒启动心电图
-            if (completedCardId === 'file_010' && window.ecgController && !window._ecgStarted) {
-                window._ecgStarted = true;
-                setTimeout(() => {
-                    window.ecgController.start();
-                    console.log('[ECG] Started 1s after reading README');
-                }, 1000);
-            }
-
-            // 删除阶段由 markCardAsRead 与已读进度一起更新并保存。
-
-            // 刷新UI
-            refreshUI();
-        });
     }
 
     // 更新内容区 - 使用新的渲染引擎
@@ -1752,6 +1719,7 @@ function displayCard(card) {
                     if (result.correct) {
                         // 🔧 答对后补充显示最后的内容，并启用逐行显示
                         setTimeout(() => {
+                            if (renderer.currentCardId !== card.id) return;
                             // 获取完整卡片内容
                             const fullCard = cardManager.getCardById(card.id);
 
@@ -1832,7 +1800,7 @@ function displayCard(card) {
                             const supplementParagraphs = Array.from(textContent.querySelectorAll('.content-paragraph'))
                                 .filter(p => parseInt(p.dataset.lineIndex) >= paragraphIndex);
 
-                            renderer.lineByLineController = new LineByLineController(supplementParagraphs, fullCard);
+                            renderer.createReadingController(supplementParagraphs, fullCard);
 
                             // 添加或更新继续提示
                             let continueHint = textContent.querySelector('.continue-hint');
@@ -1852,90 +1820,8 @@ function displayCard(card) {
                                 textContent.appendChild(continueHint);
                             }
 
-                            // 重新绑定点击事件（因为新的LineByLineController）
-                            const clickHandler = () => {
-                                if (renderer.lineByLineController.fullAutoPlayMode) {
-                                    return;
-                                }
-
-                                renderer.lineByLineController.showNext();
-
-                                // 如果全部显示完成
-                                if (renderer.lineByLineController.isComplete()) {
-                                    continueHint.style.display = 'none';
-
-                                    // 标记卡片为已读
-                                    gameState.markCardAsRead(fullCard.id);
-                                    cardManager.updateCardReadStatus(fullCard.id, true);
-
-                                    // 检查并解锁指令
-                                    checkAndUnlockCommands(fullCard.id);
-
-                                    // 🔧 修复：无条件检查unlock_by链条（不仅限于trigger_unlock）
-                                    if (typeof unlockManager !== 'undefined') {
-                                        const unlockedFiles = unlockManager.checkReadTriggeredUnlocks(fullCard.id);
-                                        if (unlockedFiles && unlockedFiles.length > 0) {
-                                            console.log(`[Q&A Supplement] Unlocked files via unlock_by:`, unlockedFiles);
-                                        }
-                                    }
-
-                                    refreshUI();
-                                    textContent.removeEventListener('click', clickHandler);
-                                }
-                            };
-
-                            // 移除旧的事件监听器，添加新的
-                            const oldClickHandler = textContent.onclick;
-                            if (oldClickHandler) {
-                                textContent.removeEventListener('click', oldClickHandler);
-                            }
-                            textContent.addEventListener('click', clickHandler);
-
-                            // 🔧 添加键盘事件监听器（修复问答卡片无法通过Enter键继续的问题）
-                            const handleKeyboard = (e) => {
-                                if (!e.target.matches('input, textarea')) {
-                                    if (e.key === 'Enter') {
-                                        e.preventDefault();
-
-                                        // 如果是全自动播放模式，忽略用户Enter键
-                                        if (renderer.lineByLineController && renderer.lineByLineController.fullAutoPlayMode) {
-                                            console.log('[LineByLine] Full auto-play mode, ignoring user Enter key');
-                                            return;
-                                        }
-
-                                        if (renderer.lineByLineController) {
-                                            renderer.lineByLineController.showNext();
-
-                                            // 如果全部显示完成
-                                            if (renderer.lineByLineController.isComplete()) {
-                                                continueHint.style.display = 'none';
-                                                document.removeEventListener('keydown', handleKeyboard);
-
-                                                // 标记卡片为已读
-                                                gameState.markCardAsRead(fullCard.id);
-                                                cardManager.updateCardReadStatus(fullCard.id, true);
-
-                                                // 检查并解锁指令
-                                                checkAndUnlockCommands(fullCard.id);
-
-                                                // 🔧 修复：无条件检查unlock_by链条（不仅限于trigger_unlock）
-                                                if (typeof unlockManager !== 'undefined') {
-                                                    const unlockedFiles = unlockManager.checkReadTriggeredUnlocks(fullCard.id);
-                                                    if (unlockedFiles && unlockedFiles.length > 0) {
-                                                        console.log(`[Q&A Supplement] Unlocked files via unlock_by:`, unlockedFiles);
-                                                    }
-                                                }
-
-                                                refreshUI();
-                                            }
-                                        }
-                                    } else if (e.key === 'Escape' && renderer.lineByLineController && renderer.lineByLineController.isAutoPlaying) {
-                                        e.preventDefault();
-                                        renderer.lineByLineController.skipAutoSequence();
-                                    }
-                                }
-                            };
-                            document.addEventListener('keydown', handleKeyboard);
+                            renderer.bindReadingControls(textContent, continueHint, renderer.lineByLineController);
+                            if (readingLockManager) readingLockManager.lock(fullCard.id);
 
                             refreshUI();
                         }, 300);  // 🔧 缩短延迟到300ms，提升答对后的响应速度
@@ -1981,49 +1867,6 @@ function displayCard(card) {
                 }
             }
 
-            // 对问答类型卡片的特殊处理：确保逐行阅读完成后被标记为已读
-            if (card.unlock_type === 'question' && card.status === 'unlocked' && !card.is_read) {
-
-                // 监听容器点击，每次点击后检查是否完成
-                const checkAndMark = () => {
-                    // 延迟检查，确保renderer有时间更新状态
-                    setTimeout(() => {
-                        if (renderer.lineByLineController && renderer.lineByLineController.isComplete()) {
-                            gameState.markCardAsRead(card.id);
-                            cardManager.updateCardReadStatus(card.id, true);
-
-                            // 检查并解锁指令
-                            checkAndUnlockCommands(card.id);
-
-                            // 🔧 修复：检查unlock_by链条（与补充内容handler保持一致）
-                            if (typeof unlockManager !== 'undefined') {
-                                const unlockedFiles = unlockManager.checkReadTriggeredUnlocks(card.id);
-                                if (unlockedFiles && unlockedFiles.length > 0) {
-                                    console.log(`[Q&A Re-read] Unlocked files via unlock_by:`, unlockedFiles);
-                                }
-                            }
-
-                            refreshUI();
-                            // 移除监听器
-                            textContent.removeEventListener('click', checkAndMark);
-                            document.removeEventListener('keydown', checkAndMarkKeyboard);
-                        }
-                    }, 100);
-                };
-
-                // 🔧 添加键盘事件监听器（修复问答卡片无法通过Enter键继续的问题）
-                const checkAndMarkKeyboard = (e) => {
-                    if (!e.target.matches('input, textarea')) {
-                        if (e.key === 'Enter') {
-                            e.preventDefault();
-                            checkAndMark();
-                        }
-                    }
-                };
-
-                textContent.addEventListener('click', checkAndMark);
-                document.addEventListener('keydown', checkAndMarkKeyboard);
-            }
         }
 
         // 刷新scramble特效（卡片内容区域）
@@ -2031,22 +1874,6 @@ function displayCard(card) {
             setTimeout(() => {
                 scrambleEffect.refresh();
             }, 50); // 轻微延迟确保DOM渲染完成
-        }
-    }
-}
-
-/**
- * 检查并解锁指令（根据已读卡片）
- * @param {string} cardId - 刚刚阅读完的卡片ID
- */
-function checkAndUnlockCommands(cardId) {
-    if (COMMAND_UNLOCK_MAP[cardId]) {
-        const commands = COMMAND_UNLOCK_MAP[cardId];
-        const unlocked = gameState.unlockCommands(commands);
-
-        if (unlocked > 0) {
-            console.log(`[Command Unlock] Card ${cardId} unlocked ${unlocked} command(s)`);
-            // 可以在这里添加提示，但目前保持静默
         }
     }
 }
@@ -2379,8 +2206,12 @@ function handleLoad() {
 
     const loaded = gameState.loadState();
     if (loaded) {
+        gameState.reconcileProgress(cardManager.getAllCards(), COMMAND_UNLOCK_MAP);
+        gameState.saveState();
+        syncStateToCardManager();
         showFeedback(TEXT.gameLoaded, 'success');
         refreshUI();
+        resumeStoryPhase();
     } else {
         showFeedback(TEXT.noSaveFound, 'error');
     }
@@ -3220,6 +3051,7 @@ function playDeletionAnimation1() {
         audioManager.playMusic('Error', 1, 1000);
     }
 
+    gameState.advanceStoryPhase('deletion1');
     const deletion1 = new DeletionAnimation1();
     deletion1.onComplete = () => {
         console.log('Deletion animation 1 completed');
@@ -3235,37 +3067,12 @@ function playDeletionAnimation1() {
             gameState.setCurrentBGM('Delete');
         }
 
-        // 动画1完成后，延迟2秒自动解锁 file_016
+        syncStateToCardManager();
         setTimeout(() => {
-            const fileDelete2 = cardManager.getCardById('file_016');
-            if (fileDelete2 && fileDelete2.status !== 'unlocked') {
-                console.log('[Delete System] Attempting to unlock file_016...');
-
-                // 发现文件（如果尚未发现）
-                if (!gameState.isCardDiscovered('file_016')) {
-                    gameState.discoverCard('file_016');
-                    cardManager.updateCardDiscoveredStatus('file_016', true);
-                    console.log('[Delete System] file_016 discovered');
-
-                    // 🎵 播放发现音效
-                    if (window.audioManager) {
-                        console.log('[Delete System] Playing discover sound for file_016');
-                        audioManager.playSFX('discover', 0.5, true);
-                    }
-                }
-
-                // 解锁文件
-                cardManager.updateCardStatus('file_016', 'unlocked');
-                gameState.unlockCard('file_016');
-                console.log('[Delete System] file_016 unlocked');
-
-                // 触发解锁通知（显示反馈消息和更新UI）
-                unlockManager.notifyFileUnlock(fileDelete2);
-                console.log('[Delete System] file_016 unlock notification sent');
-            } else {
-                console.log('[Delete System] file_016 already unlocked or not found');
-            }
+            const file = cardManager.getCardById('file_016');
+            if (file) unlockManager.notifyFileUnlock(file);
         }, 2000);
+
     };
     deletion1.run();
 }
@@ -3310,6 +3117,7 @@ function playDeletionAnimation2() {
         audioManager.playMusic('Error.m4a', 1, 1000);
     }
 
+    gameState.advanceStoryPhase('deletion2');
     const deletion2 = new DeletionAnimation2({ glitchEnabled: true });
     deletion2.onComplete = () => {
         console.log('Deletion animation 2 completed');

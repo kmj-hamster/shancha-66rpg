@@ -26,6 +26,10 @@ class EndingScreen {
      * 显示结束界面
      */
     show() {
+        if (this.screen) return;
+        if (typeof gameState !== 'undefined' && gameState) {
+            gameState.advanceStoryPhase('ended');
+        }
         console.log('[EndingScreen] Showing ending screen...');
 
         // 创建结束界面DOM

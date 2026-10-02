@@ -10,17 +10,18 @@ function harness(saved) {
     const context = vm.createContext({
         console: { log() {}, warn() {}, error() {} },
         window: {},
-        document: { addEventListener() {}, querySelector() { return null; } },
+        document: { addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; } },
+        setTimeout() {},
         localStorage: {
             getItem: key => storage.get(key) ?? null,
             setItem: (key, value) => storage.set(key, value),
             removeItem: key => storage.delete(key)
         }
     });
-    for (const file of ['js/state.js', 'js/app.js']) {
+    for (const file of ['data/cards-data-zh.js', 'js/state.js', 'js/cards.js', 'js/unlock.js', 'js/app.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
     }
-    vm.runInContext('gameState = new GameState()', context);
+    vm.runInContext('CARDS_DATA = window.CARDS_DATA; gameState = new GameState(); cardManager = new CardManager(); cardManager.loadCards(); unlockManager = new UnlockManager(cardManager, gameState)', context);
     return {
         run: code => vm.runInContext(code, context),
         saved: () => JSON.parse(storage.get('gameState'))
@@ -52,13 +53,10 @@ for (const [id, stage, input] of [['file_015', 'stage1', '18'], ['file_016', 'st
         const h = harness();
         if (id === 'file_016') h.run("gameState.markCardAsRead('file_015')");
         h.run(`
-            var card = { id: '${id}', status: 'unlocked', is_read: false, unlock_type: 'direct' };
+            var card = cardManager.getCardById('${id}');
+            gameState.discoverCard(card.id); gameState.unlockCard(card.id);
+            syncStateToCardManager();
             var completion;
-            cardManager = {
-                getCardById: () => card,
-                updateCardReadStatus: (id, read) => { card.is_read = read; },
-                getCardNewClues: () => []
-            };
             readingLockManager = { isLocked: () => false, lock() {}, unlock() {} };
             renderer = { onReadingComplete: callback => { completion = callback; } };
             refreshUI = () => {};

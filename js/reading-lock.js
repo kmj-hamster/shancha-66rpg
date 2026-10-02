@@ -62,14 +62,6 @@ class ReadingLockManager {
             return false;
         }
 
-        const cardId = readingState.cardId;
-
-        // 标记卡片已读
-        if (cardId) {
-            this.gameState.markCardAsRead(cardId);
-            console.log(`[ReadingLock] Marked card ${cardId} as read`);
-        }
-
         // 恢复交互
         this.enableInteractions();
 
