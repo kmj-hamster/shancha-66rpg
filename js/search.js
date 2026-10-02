@@ -131,7 +131,7 @@ class SearchEngine {
             // 更新页面上所有对应 clue 的样式（降低已使用 clue 的亮度）
             const normalizedClue = actualClue.toLowerCase().trim();
             document.querySelectorAll('.clue-word').forEach(el => {
-                if (el.textContent.toLowerCase().trim() === normalizedClue) {
+                if ((el.dataset.clue || el.textContent).toLowerCase().trim() === normalizedClue) {
                     el.classList.add('clue-used');
                     el.style.color = '#a0a0a0';
                 }

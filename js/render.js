@@ -256,7 +256,8 @@ class Renderer {
         // 如果是线索词，添加点击事件
         if (segment.style === 'clue') {
             // 检查是否已使用，降低亮度
-            const clueText = segment.text.toLowerCase().trim();
+            const clueText = (segment.clue || segment.text).toLowerCase().trim();
+            span.dataset.clue = clueText;
             if (window.gameState && window.gameState.isClueUsed(clueText)) {
                 span.classList.add('clue-used');
                 span.style.color = '#a0a0a0';
@@ -273,12 +274,12 @@ class Renderer {
 
                 // 切换到Clue标签页，并传入要选中的 clue
                 if (window.switchToClueTab) {
-                    window.switchToClueTab(segment.text);
+                    window.switchToClueTab(segment.clue || segment.text);
                 }
 
                 // 填充线索词到输入框
                 if (window.fillClueToInput) {
-                    window.fillClueToInput(segment.text);
+                    window.fillClueToInput(segment.clue || segment.text);
                 }
             };
         }

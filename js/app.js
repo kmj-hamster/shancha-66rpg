@@ -1691,7 +1691,7 @@ function displayCard(card) {
                 const extractedClues = [];
                 preview.preview.forEach(segment => {
                     if (segment.style === 'clue' && segment.text) {
-                        const clueText = segment.text.toLowerCase().replace(/[.,!?]/g, '').trim();
+                        const clueText = (segment.clue || segment.text).toLowerCase().replace(/[.,!?]/g, '').trim();
                         if (clueText && !extractedClues.includes(clueText)) {
                             extractedClues.push(clueText);
                         }
@@ -1731,7 +1731,7 @@ function displayCard(card) {
                             const supplementClues = [];
                             supplementContent.forEach(segment => {
                                 if (segment.style === 'clue' && segment.text) {
-                                    const clueText = segment.text.toLowerCase().replace(/[.,!?]/g, '').trim();
+                                    const clueText = (segment.clue || segment.text).toLowerCase().replace(/[.,!?]/g, '').trim();
                                     if (clueText && !supplementClues.includes(clueText)) {
                                         supplementClues.push(clueText);
                                     }
@@ -1851,7 +1851,7 @@ function displayCard(card) {
                 const extractedClues = [];
                 card.content.forEach(segment => {
                     if (segment.style === 'clue' && segment.text) {
-                        const clueText = segment.text.toLowerCase().replace(/[.,!?]/g, '').trim();
+                        const clueText = (segment.clue || segment.text).toLowerCase().replace(/[.,!?]/g, '').trim();
                         if (clueText && !extractedClues.includes(clueText)) {
                             extractedClues.push(clueText);
                         }

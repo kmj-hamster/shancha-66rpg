@@ -166,7 +166,7 @@ window.CARDS_DATA = {
       ],
       "unlock_type": "count",
       "unlock_condition": {
-        "required_cards": 9
+        "required_cards": 8
       },
       "content": [
         {
@@ -430,11 +430,11 @@ window.CARDS_DATA = {
     },
     {
       "id": "mem_007",
-      "title": "7-23:00-泥土",
+      "title": "7-23:00-凉水",
       "type": "memory",
       "year": 1945,
       "time": "11pm",
-      "unlock_clue": "泥土",
+      "unlock_clue": "凉水",
       "new_clues": [
         "冰"
       ],
@@ -452,7 +452,7 @@ window.CARDS_DATA = {
       },
       "content": [
         {
-          "text": "一盆冷水从头顶浇下。",
+          "text": "一盆凉水从头顶浇下。",
           "style": "default",
           "breakAfter": true
         },
@@ -894,7 +894,7 @@ window.CARDS_DATA = {
       "year": 1945,
       "time": "6pm",
       "unlock_clue": "茶",
-      "new_clues": [],
+      "new_clues": ["凉水"],
       "unlock_type": "direct",
       "unlock_condition": null,
       "content": [
@@ -904,7 +904,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "她向我讲述了磁带中的秘密：铁人计划。这个反人类的疯狂想法，撕掉了将军在我心中的最后一层伪装。",
+          "text": "她向我讲述了磁带中的秘密：铁人计划。这个残酷的计划，撕掉了将军在我心中的最后一层伪装。",
           "style": "default",
           "breakAfter": true
         },
@@ -924,7 +924,16 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "我端起茶杯，又喝了一口。茶已经凉了，舌根上尽是苦涩的味道。",
+          "text": "我端起茶杯，又喝了一口。茶已经",
+          "style": "default"
+        },
+        {
+          "text": "凉",
+          "style": "clue",
+          "clue": "凉水"
+        },
+        {
+          "text": "了，舌根上尽是苦涩的味道。",
           "style": "default",
           "breakAfter": true
         },

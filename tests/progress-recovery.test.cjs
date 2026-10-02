@@ -28,7 +28,7 @@ function boot(saved, lang = 'zh') {
     });
     vm.runInContext('window = globalThis', context);
     for (const file of [`data/cards-data-${lang}.js`, 'js/state.js', 'js/cards.js', 'js/unlock.js',
-        'js/reading-lock.js', 'js/render.js', 'js/app.js', 'js/memory-decay.js', 'js/ending.js']) {
+        'js/search.js', 'js/reading-lock.js', 'js/render.js', 'js/app.js', 'js/memory-decay.js', 'js/ending.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
     }
     const run = source => vm.runInContext(source, context);
@@ -247,3 +247,45 @@ test('old saves recover command unlocks, startup files, count gates and sort-yea
     assert.ok(h.save().unlocked_commands.includes('/sort'));
     assert.ok(h.save().unlocked_commands.includes('/sort year'));
 });
+
+for (const lang of ['zh', 'en']) {
+    test(lang + ': tea clue postpones memory 7 without blocking the eight-memory gate', () => {
+        const h = boot({discovered_cards: ['file_011'], unlocked_cards: ['file_011']}, lang);
+        h.run('searchEngine = new SearchEngine(cardManager, gameState)');
+        const search = id => h.run('searchEngine.search(cardManager.getCardById(' + JSON.stringify(id) + ').unlock_clue)');
+        const read = id => h.run('gameState.completeCardReading(' + JSON.stringify(id) + ', cardManager.getAllCards(), COMMAND_UNLOCK_MAP); syncStateToCardManager()');
+        read('file_011');
+        search('mem_001'); read('mem_001');
+        search('mem_002'); read('mem_002'); search('mem_003');
+        search('mem_004'); read('mem_004'); search('mem_005');
+        search('mem_006'); read('mem_006');
+        assert.deepEqual(Array.from(search('mem_008').matchedCards, card => card.id), ['mem_008']);
+        read('mem_008'); search('mem_009');
+        assert.equal(h.run('unlockManager.getDiscoveredMemoryCount()'), 8);
+        assert.equal(h.run('gameState.isCardUnlocked("mem_003")'), true);
+        assert.equal(search('mem_007').success, false);
+        read('mem_003'); search('mem_010'); read('mem_010');
+        search('mem_011'); read('mem_011');
+        assert.equal(h.run('unlockManager.verifyAnswer("mem_012", "memory").correct'), true);
+        read('mem_012'); search('mem_013');
+        assert.equal(search('mem_007').success, false);
+        read('mem_013');
+        assert.equal(search('mem_007').success, true);
+        assert.equal(h.run('cardManager.getCardById("mem_007").status'), 'partial');
+        assert.equal(h.run('unlockManager.verifyAnswer("mem_007", "Iron").correct'), true);
+        read('mem_007'); assert.equal(search('mem_014').success, true);
+    });
+
+    test(lang + ': old tea saves restore the canonical clue and clicking its short text selects it', () => {
+        const h = boot({discovered_cards: ['mem_013'], unlocked_cards: ['mem_013'], read_cards: ['mem_013']}, lang);
+        const clue = lang === 'zh' ? '凉水' : 'cool water';
+        const short = lang === 'zh' ? '凉' : 'cool';
+        assert.ok(h.save().discovered_clues.includes(clue));
+        assert.equal(h.save().discovered_clues.includes(short), false);
+        h.run('memoryDecay = {isActive: false}; var selected, filled; window.switchToClueTab = value => selected = value; window.fillClueToInput = value => filled = value; var segment = cardManager.getCardById("mem_013").content.find(s => s.style === "clue"); var span = renderer.createTextElement(segment); span.onclick({stopPropagation(){}})');
+        assert.equal(h.run('span.textContent'), short);
+        assert.equal(h.run('selected'), clue);
+        assert.equal(h.run('filled'), clue);
+        assert.equal(h.run('span.dataset.clue'), clue);
+    });
+}

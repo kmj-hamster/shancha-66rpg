@@ -165,7 +165,7 @@ window.CARDS_DATA = {
       ],
       "unlock_type": "count",
       "unlock_condition": {
-        "required_cards": 9
+        "required_cards": 8
       },
       "content": [
         {
@@ -414,11 +414,11 @@ window.CARDS_DATA = {
     },
     {
       "id": "mem_007",
-      "title": "7-11pm-soil",
+      "title": "7-11pm-cool water",
       "type": "memory",
       "year": 1945,
       "time": "11pm",
-      "unlock_clue": "soil",
+      "unlock_clue": "cool water",
       "new_clues": [
         "ice"
       ],
@@ -431,7 +431,7 @@ window.CARDS_DATA = {
       },
       "content": [
         {
-          "text": "A basin of cold water pours down from above.",
+          "text": "A basin of cool water pours down from above.",
           "style": "default",
           "breakAfter": true
         },
@@ -848,7 +848,7 @@ window.CARDS_DATA = {
       "year": 1945,
       "time": "6pm",
       "unlock_clue": "tea",
-      "new_clues": [],
+      "new_clues": ["cool water"],
       "unlock_type": "direct",
       "unlock_condition": null,
       "content": [
@@ -858,7 +858,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "She tells me the secret on the tape—Project Iron. This insane, anti-human idea tears away the last layer of the General's disguise in my heart.",
+          "text": "She tells me the secret on the tape—Project Iron. This cruel plan tears away the last layer of the General's disguise in my heart.",
           "style": "default",
           "breakAfter": true
         },
@@ -878,7 +878,16 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "I lift the teacup and take another sip. The tea is already cold; bitterness pools at the root of my tongue.",
+          "text": "I lift the teacup and take another sip. The tea is already ",
+          "style": "default"
+        },
+        {
+          "text": "cool",
+          "style": "clue",
+          "clue": "cool water"
+        },
+        {
+          "text": "; bitterness pools at the root of my tongue.",
           "style": "default",
           "breakAfter": true
         },

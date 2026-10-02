@@ -714,7 +714,7 @@ class GameState {
             const card = byId.get(id);
             const clues = [...(card.new_clues || []), ...(card.content || [])
                 .filter(segment => segment.style === 'clue' && segment.text)
-                .map(segment => segment.text.replace(/[.,!?]/g, ''))];
+                .map(segment => (segment.clue || segment.text).replace(/[.,!?]/g, ''))];
             for (const clue of clues) {
                 const normalized = clue.toLowerCase().trim();
                 if (normalized) add('discovered_clues', normalized);
