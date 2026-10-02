@@ -977,8 +977,8 @@ function executeReset() {
     }
 
     // 2. 清除所有游戏相关localStorage
-    localStorage.removeItem('gameState');
-    localStorage.removeItem('saveTime');
+    localStorage.removeItem(getGameStorageKey('gameState'));
+    localStorage.removeItem(getGameStorageKey('saveTime'));
     localStorage.removeItem('gameLang');
     localStorage.removeItem('introAnimationShown');
 

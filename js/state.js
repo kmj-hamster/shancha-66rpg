@@ -1,3 +1,8 @@
+// 调试入口使用独立存档，重置和结局重玩也不会影响正式进度。
+function getGameStorageKey(key) {
+    return window.DEBUG_STORY_MODE ? key + '_debug' : key;
+}
+
 /**
  * 游戏状态管理器
  * 负责管理游戏的所有运行时状态
@@ -387,8 +392,8 @@ class GameState {
             stateCopy._version = SAVE_VERSION;
 
             const stateJSON = JSON.stringify(stateCopy);
-            localStorage.setItem('gameState', stateJSON);
-            localStorage.setItem('saveTime', new Date().toISOString());
+            localStorage.setItem(getGameStorageKey('gameState'), stateJSON);
+            localStorage.setItem(getGameStorageKey('saveTime'), new Date().toISOString());
             return true;
         } catch (error) {
             console.error('[State] Failed to save:', error);
@@ -401,7 +406,7 @@ class GameState {
      */
     loadState() {
         try {
-            const savedState = localStorage.getItem('gameState');
+            const savedState = localStorage.getItem(getGameStorageKey('gameState'));
             if (!savedState) return false;
 
             let loaded;
@@ -429,7 +434,7 @@ class GameState {
             // 验证数据完整性
             this.validateState();
 
-            const saveTime = localStorage.getItem('saveTime');
+            const saveTime = localStorage.getItem(getGameStorageKey('saveTime'));
             console.log(`[State] Loaded from: ${saveTime}, version: ${loaded._version || 'unknown'}`);
             return true;
         } catch (error) {
@@ -510,16 +515,16 @@ class GameState {
         } catch (e) {
             console.error('[State] Failed to backup corrupted save');
         }
-        localStorage.removeItem('gameState');
-        localStorage.removeItem('saveTime');
+        localStorage.removeItem(getGameStorageKey('gameState'));
+        localStorage.removeItem(getGameStorageKey('saveTime'));
     }
 
     /**
      * 清除保存的状态
      */
     clearSavedState() {
-        localStorage.removeItem('gameState');
-        localStorage.removeItem('saveTime');
+        localStorage.removeItem(getGameStorageKey('gameState'));
+        localStorage.removeItem(getGameStorageKey('saveTime'));
     }
 
     /**

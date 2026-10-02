@@ -60,7 +60,7 @@ class LangSelect {
    * @returns {Object} { skip: boolean, reason: string, lang: string|null }
    */
   static checkSkipCondition() {
-    const hasSave = localStorage.getItem('gameState') !== null
+    const hasSave = localStorage.getItem(getGameStorageKey('gameState')) !== null
     const savedLang = localStorage.getItem('gameLang')
 
     // 有存档 → 跳过语言选择和Opening，直接进入游戏

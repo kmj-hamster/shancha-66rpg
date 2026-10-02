@@ -117,8 +117,8 @@ class EndingScreen {
         }
 
         // 2. 清除所有游戏相关localStorage
-        localStorage.removeItem('gameState');
-        localStorage.removeItem('saveTime');
+        localStorage.removeItem(getGameStorageKey('gameState'));
+        localStorage.removeItem(getGameStorageKey('saveTime'));
         localStorage.removeItem('gameLang');
 
         console.log('[EndingScreen] localStorage cleared, reloading...');
