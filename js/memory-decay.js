@@ -967,6 +967,7 @@ class MemoryDecayEffect {
      */
     triggerAwakeningSequence() {
         console.log('🌅 Starting awakening sequence...');
+        gameState.beginAwakening();
 
         // 🎵 强制重置音频状态（iOS 修复：清理所有残留的 interval 和状态）
         if (window.audioManager) {
@@ -1008,16 +1009,13 @@ class MemoryDecayEffect {
         // 1. 先播放苏醒动画（遮盖屏幕）
         if (typeof AwakeningAnimation !== 'undefined') {
             const awakening = new AwakeningAnimation({
-                finalMemories: [
-                    'sunflower', 'photo', 'Mozart', 'Firework',
-                    'cat', 'Wagner'
-                ],
+                finalMemories: AWAKENING_MEMORY_IDS.map(id => cardManager.getCardById(id).title),
                 onComplete: () => {
                     console.log('✅ Awakening animation completed');
-                    console.log('🌅 Player can now read the 8 new memories');
+                    console.log('🌅 Player can now read the 6 final memories');
 
-                    // 动画完成后启动倒计时
-                    this.startConnectionTerminatingCountdown();
+                    // 动画完成后等待玩家读完记忆并主动唤醒。
+                    this.startAwakeningProgress();
                 }
             });
             awakening.run();
@@ -1039,70 +1037,8 @@ class MemoryDecayEffect {
                 }
             }, 14000);
 
-            // 2. 动画启动后2秒更新数据和UI（动画会遮盖变化过程，确保淡入完成）
-            setTimeout(() => {
-                // 隐藏 mem_025
-                this.hiddenCards.add('mem_025');
-                console.log('[Awakening] mem_025 hidden from list');
-
-                // 解锁 6 个新记忆 + mem_019 (19-8pm-blood)
-                // 注：mem_030(Toast)不存在，mem_032(Cigarette)已移除
-                const newMemories = [
-                    'mem_026', 'mem_027', 'mem_028', 'mem_029',
-                    'mem_031', 'mem_033',
-                    'mem_019'  // 19-8pm-blood
-                ];
-
-                if (typeof gameState !== 'undefined' && typeof cardManager !== 'undefined') {
-                    newMemories.forEach(memId => {
-                        // 发现并解锁
-                        if (!gameState.isCardDiscovered(memId)) {
-                            gameState.discoverCard(memId);
-                            cardManager.updateCardDiscoveredStatus(memId, true);
-
-                            // 🎵 播放发现音效
-                            if (window.audioManager) {
-                                audioManager.playSFX('discover', 0.5, true);
-                            }
-                        }
-                        if (!gameState.isCardUnlocked(memId)) {
-                            gameState.unlockCard(memId);
-                            cardManager.updateCardStatus(memId, 'unlocked');
-                        }
-                        // 确保是未读状态
-                        if (gameState.isCardRead(memId)) {
-                            // 如果已读，重置为未读
-                            const state = gameState.getState();
-                            const index = state.read_cards.indexOf(memId);
-                            if (index > -1) {
-                                state.read_cards.splice(index, 1);
-                            }
-                            cardManager.updateCardReadStatus(memId, false);
-                        }
-                        console.log(`[Awakening] ${memId} unlocked and set to unread`);
-                    });
-                }
-
-                // 清除 file tab 的未读小蓝点
-                this.clearFileTabUnreadIndicator();
-
-                // 永久禁用 file 和 clue tab
-                if (typeof window.permanentlyDisableTabs === 'function') {
-                    window.permanentlyDisableTabs(['file', 'clue']);
-                    console.log('[Awakening] file and clue tabs permanently disabled');
-                }
-
-                // 开启年份显示（显示9个新记忆的年份）
-                if (typeof gameState !== 'undefined') {
-                    gameState.setShowYear(true);
-                    console.log('[Awakening] Year display enabled');
-                }
-
-                // 刷新 UI（显示新的 9 个记忆）
-                if (typeof refreshUI === 'function') {
-                    refreshUI();
-                }
-            }, 2000); // 动画启动后2秒更新，确保淡入完成
+            // 动画遮盖期间准备阅读界面；进度来自存档，重复调用不会重置。
+            setTimeout(() => this.startAwakeningProgress(), 2000);
         } else {
             console.warn('[Awakening] AwakeningAnimation class not found');
         }
@@ -1124,79 +1060,74 @@ class MemoryDecayEffect {
         }
     }
 
-    /**
-     * 启动连接终止倒计时
-     */
-    startConnectionTerminatingCountdown() {
-        console.log('[Countdown] Starting connection terminating countdown...');
-
-        let remainingSeconds = 100;
-        const currentLang = localStorage.getItem('gameLang') || 'en';
-
-        // 获取 system-output 区域
-        const systemOutput = document.querySelector('.system-output');
-
-        if (!systemOutput) {
-            console.warn('[Countdown] system-output not found');
-            return;
+    /** 恢复最终阅读界面，刷新后也能继续推进。 */
+    startAwakeningProgress() {
+        this.awakeningProgressActive = true;
+        this.isActive = false;
+        if (this.scramble && this.scramble.enabled) this.scramble.disable();
+        this.hiddenCards = new Set(cardManager.getAllCards()
+            .filter(card => !AWAKENING_MEMORY_IDS.includes(card.id)).map(card => card.id));
+        for (const id of AWAKENING_MEMORY_IDS) {
+            cardManager.updateCardDiscoveredStatus(id, true);
+            cardManager.updateCardStatus(id, 'unlocked');
+            cardManager.updateCardReadStatus(id, gameState.isCardRead(id));
         }
+        this.disableFinalLock();
+        if (readingLockManager) readingLockManager.restore();
+        window.permanentlyDisableTabs(['file', 'clue']);
+        gameState.setTab('memory');
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.type === 'memory');
+        });
+        document.querySelectorAll('.func-btn').forEach(btn => {
+            if (btn.dataset.mode !== 'reset') btn.style.display = 'none';
+        });
+        const input = document.querySelector('.command-input');
+        if (input) input.disabled = true;
+        this.clearFileTabUnreadIndicator();
+        refreshUI();
+        this.renderAwakeningProgress();
+    }
 
-        const outputLines = systemOutput.querySelectorAll('.output-line');
-        if (outputLines.length < 2) {
-            console.warn('[Countdown] output-line elements not found');
-            return;
-        }
-
-        // 检测手机横屏模式（isMobileLandscape 定义在 app.js）
-        const isMobile = typeof isMobileLandscape === 'function' && isMobileLandscape();
-
-        // 手机端使用 lines[1]（唯一可见行），PC端使用 lines[0]
-        const countdownLine = isMobile ? outputLines[1] : outputLines[0];
-        const otherLine = isMobile ? outputLines[0] : outputLines[1];
-
-        // 隐藏 SEARCH 和 SAVE 按钮
-        const searchBtn = document.querySelector('.func-btn[data-mode="search"]');
-        const saveBtn = document.querySelector('.func-btn[data-mode="save"]');
-        if (searchBtn) searchBtn.style.display = 'none';
-        if (saveBtn) saveBtn.style.display = 'none';
-        console.log('[Countdown] SEARCH and SAVE buttons hidden');
-
-        // 清空两行内容
-        countdownLine.textContent = '';
-        otherLine.textContent = '';
-
-        // 本地化文本
-        const terminatingText = currentLang === 'zh' ? '连接即将断开' : 'Connection terminating';
-        const terminatedText = currentLang === 'zh' ? '连接已断开。' : 'Connection terminated.';
-
-        // 显示初始倒计时（带前缀）
-        countdownLine.textContent = `> SYSTEM: ${terminatingText}, ${remainingSeconds}s...`;
-
-        console.log('[Countdown] Countdown display started in line ' + (isMobile ? '2' : '1'));
-
-        // 每秒更新一次
-        const countdownInterval = setInterval(() => {
-            remainingSeconds--;
-
-            if (remainingSeconds > 0) {
-                countdownLine.textContent = `> SYSTEM: ${terminatingText}, ${remainingSeconds}s...`;
-            } else {
-                // 倒计时结束
-                countdownLine.textContent = `> SYSTEM: ${terminatedText}`;
-                clearInterval(countdownInterval);
-                console.log('[Countdown] Connection terminating countdown completed');
-
-                // 启动结束序列
+    renderAwakeningProgress() {
+        if (!this.awakeningProgressActive || this.endingStarted) return;
+        const container = document.querySelector('.system-output');
+        if (!container) return;
+        container.classList.add('awakening-progress-mode');
+        let panel = container.querySelector('.awakening-progress');
+        if (!panel) {
+            panel = document.createElement('div');
+            panel.className = 'awakening-progress';
+            const lang = localStorage.getItem('gameLang') || 'en';
+            const label = document.createElement('span');
+            label.textContent = lang === 'zh' ? '患者苏醒进度：' : 'Patient awakening: ';
+            const bar = document.createElement('span');
+            bar.className = 'awakening-progress-blocks';
+            bar.setAttribute('aria-hidden', 'true');
+            const percent = document.createElement('span');
+            percent.className = 'awakening-progress-percent';
+            percent.setAttribute('aria-live', 'polite');
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'awakening-button';
+            button.textContent = lang === 'zh' ? '唤醒戈尔' : 'Awaken Gregor';
+            button.onclick = () => {
+                if (this.endingStarted || gameState.getAwakeningProgress() < 100) return;
+                this.endingStarted = true;
+                button.disabled = true;
                 this.startEndingSequence();
-            }
-        }, 1000);
-
-        // 保存倒计时间隔ID，以便需要时可以清除
-        this.countdownInterval = countdownInterval;
+            };
+            panel.append(label, bar, percent, button);
+            container.appendChild(panel);
+        }
+        const progress = gameState.getAwakeningProgress();
+        panel.querySelector('.awakening-progress-blocks').textContent = '▮'.repeat(progress / 10);
+        panel.querySelector('.awakening-progress-percent').textContent = progress + '%';
+        panel.querySelector('.awakening-button').hidden = progress < 100;
     }
 
     /**
-     * 启动结束序列（倒计时结束后调用）
+     * 启动结束序列（玩家点击唤醒后调用）
      * 关机动画 -> 字幕 -> 结束界面
      */
     async startEndingSequence() {

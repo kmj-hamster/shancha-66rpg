@@ -290,21 +290,7 @@ class UnlockManager {
         const card = this.cardManager.getCardById(cardId);
         const lang = localStorage.getItem('gameLang') || 'en';
 
-        // mem_007 特殊处理：根据 mem_013 解锁状态显示不同提示
-        if (cardId === 'mem_007') {
-            const isMem013Unlocked = this.gameState.isCardUnlocked('mem_013');
-            if (!isMem013Unlocked) {
-                return lang === 'zh'
-                    ? '此问题暂时无法回答'
-                    : 'This question cannot be answered at this time';
-            }
-            // mem_013 已解锁，使用原有的神经脉冲提示
-            if (card && card.unlock_condition?.hint) {
-                return card.unlock_condition.hint;
-            }
-        }
-
-        // 优先使用卡片中配置的自定义提示（不加Hint前缀，直接显示神经脉冲信息）
+        // 首次答错即显示关联提示，不要求提示所指向的卡片已解锁。
         if (card && card.unlock_condition?.hint) {
             return card.unlock_condition.hint;
         }

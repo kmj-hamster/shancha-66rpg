@@ -105,8 +105,6 @@ const DELETION_TEXTS = {
     // AwakeningAnimation - Stage 6
     awaken_complete: '>>> MEMORY RESTORATION COMPLETE <<<',
 
-    // AwakeningAnimation - Stage 7
-    awaken_patient: '>>> PATIENT AWAKENING IMMINENT <<<'
   },
 
   zh: {
@@ -206,8 +204,6 @@ const DELETION_TEXTS = {
     // AwakeningAnimation - Stage 6
     awaken_complete: '>>> 记忆恢复完成 <<<',
 
-    // AwakeningAnimation - Stage 7
-    awaken_patient: '>>> 患者即将苏醒 <<<'
   }
 }
 
@@ -926,9 +922,6 @@ class AwakeningAnimation extends DeletionSequence {
     // 阶段6：恢复完成
     await this.stage6_recoveryComplete()
 
-    // 阶段7：患者即将苏醒（大字号）
-    await this.stage7_patientAwakening()
-
     // 等待3秒让用户看完
     await this.delay(3000)
 
@@ -1011,12 +1004,6 @@ class AwakeningAnimation extends DeletionSequence {
     await this.showLog('', 'log-awakening-normal', 300)
   }
 
-  /**
-   * 阶段7：患者即将苏醒（大字号）
-   */
-  async stage7_patientAwakening() {
-    await this.showLog(this.texts.awaken_patient, 'log-awakening-final', 800)
-  }
 }
 
 

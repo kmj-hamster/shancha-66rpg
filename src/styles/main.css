@@ -319,6 +319,54 @@ body.lang-en .text-content {
 }
 
 /* DELETE 确认提示高亮样式 */
+.system-output.awakening-progress-mode {
+  height: auto !important;
+  min-height: 32px !important;
+  overflow: visible !important;
+  flex: 0 0 auto;
+}
+
+.awakening-progress-mode .output-line {
+  display: none;
+}
+
+.awakening-progress {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 0;
+  color: var(--phosphor-primary, #8aff8a);
+  font-size: clamp(16px, 2vw, 22px);
+  line-height: 1.4;
+}
+
+.awakening-progress-blocks {
+  font-family: monospace;
+  letter-spacing: -1px;
+  white-space: nowrap;
+}
+
+.awakening-button {
+  margin-left: 8px;
+  padding: 2px 10px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.awakening-button:hover,
+.awakening-button:focus-visible {
+  background: var(--phosphor-primary, #8aff8a);
+  color: #081008;
+}
+
+body.reading-mode .system-output.awakening-progress-mode {
+  opacity: 1;
+}
+
 .output-line.confirm-highlight {
   font-weight: bold;
   opacity: 1;

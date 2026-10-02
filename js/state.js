@@ -5,9 +5,11 @@
 
 // 存档版本号
 const SAVE_VERSION = '1.1.0';
+const AWAKENING_MEMORY_IDS = ['mem_026', 'mem_027', 'mem_028', 'mem_029', 'mem_031', 'mem_019'];
 
 // 默认状态模板（用于补全缺失字段）
 const DEFAULT_STATE = {
+    awakening_started: false,
     // 卡片相关状态
     discovered_cards: [],
     unlocked_cards: [],
@@ -51,6 +53,7 @@ class GameState {
      */
     initializeState() {
         this.state = {
+            awakening_started: false,
             // 卡片相关状态
             discovered_cards: [],      // 已发现的卡片ID列表
             unlocked_cards: [],        // 已解锁的卡片ID列表
@@ -141,6 +144,7 @@ class GameState {
     markCardAsRead(cardId) {
         if (!this.state.read_cards.includes(cardId)) {
             this.state.read_cards.push(cardId);
+            this.reconcileDeleteProgress();
             this.saveState();
             return true;
         }
@@ -480,6 +484,7 @@ class GameState {
             console.warn(`[State] Invalid delete_stage: ${this.state.delete_stage}, resetting to 'inactive'`);
             this.state.delete_stage = 'inactive';
         }
+        this.reconcileDeleteProgress();
 
         // 确保 notes 是对象
         if (typeof this.state.notes !== 'object' || this.state.notes === null) {
@@ -572,6 +577,7 @@ class GameState {
         });
 
         if (addedCount > 0) {
+            this.reconcileDeleteProgress();
             this.saveState();
         }
         return addedCount;
@@ -613,6 +619,48 @@ class GameState {
      */
     isPreviewShown(cardId) {
         return this.state.preview_shown_cards.includes(cardId);
+    }
+
+    /** 开始最终阅读阶段，一次性保存六段记忆和阶段标记。 */
+    beginAwakening() {
+        if (this.state.awakening_started) return;
+        this.state.awakening_started = true;
+        for (const id of AWAKENING_MEMORY_IDS) {
+            if (!this.state.discovered_cards.includes(id)) this.state.discovered_cards.push(id);
+            if (!this.state.unlocked_cards.includes(id)) this.state.unlocked_cards.push(id);
+        }
+        this.state.read_cards = this.state.read_cards.filter(id => !AWAKENING_MEMORY_IDS.includes(id));
+        this.state.total_discovered = this.state.discovered_cards.length;
+        this.state.current_tab = 'memory';
+        this.state.show_year = true;
+        this.saveState();
+    }
+
+    getAwakeningProgress() {
+        const count = AWAKENING_MEMORY_IDS.filter(id => this.state.read_cards.includes(id)).length;
+        return 40 + count * 10;
+    }
+
+    /**
+     * 将删除阶段和指令与已读进度同步，兼容曾在阅读中途退出的旧存档。
+     * 只推进阶段，避免重新阅读第一份说明时回退第二阶段。
+     */
+    reconcileDeleteProgress() {
+        const state = this.state;
+        const hasWord = state.delete_stage === 'stage2' ||
+            state.read_cards.includes('file_016') ||
+            state.unlocked_commands.includes('/delete word') || state.deletion2_completed;
+        const hasIndex = hasWord || state.delete_stage === 'stage1' ||
+            state.read_cards.includes('file_015') ||
+            state.unlocked_commands.includes('/delete index') || state.deletion1_completed;
+
+        state.delete_stage = hasWord ? 'stage2' : hasIndex ? 'stage1' : 'inactive';
+        if (hasIndex && !state.unlocked_commands.includes('/delete index')) {
+            state.unlocked_commands.push('/delete index');
+        }
+        if (hasWord && !state.unlocked_commands.includes('/delete word')) {
+            state.unlocked_commands.push('/delete word');
+        }
     }
 
     /**

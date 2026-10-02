@@ -513,6 +513,14 @@ async function initApp() {
     // 🔧 重置current_card状态，让用户重新选择要查看的内容
     gameState.setCurrentCard(null);
 
+    // 读档后恢复最终阅读阶段及进度，不再依赖演出中的临时定时器。
+    if (gameState.isDeletion2Completed() && gameState.isCardRead('mem_025')) {
+        gameState.beginAwakening();
+    }
+    if (gameState.getState().awakening_started && memoryDecay) {
+        memoryDecay.startAwakeningProgress();
+    }
+
     console.log('✅ Game initialized successfully!');
 }
 
@@ -1501,11 +1509,12 @@ function handleFileClick(event) {
     displayCard(card);
 
     // 标记为已读（只有完全解锁的卡片才标记为已读）
-    // 注意：对于问答类型卡片，不要在这里立即标记为已读
-    // 因为回答正确后会异步重新渲染，需要等逐行显示完成后才标记
+    // 问答卡片和删除说明需等逐行阅读完成后再标记，避免中途退出留下半完成进度。
     if (card.status === 'unlocked' &&
         !gameState.isCardRead(cardId) &&
-        card.unlock_type !== 'question') {
+        card.unlock_type !== 'question' &&
+        cardId !== 'file_015' && cardId !== 'file_016' && cardId !== 'mem_025' &&
+        !(gameState.getState().awakening_started && AWAKENING_MEMORY_IDS.includes(cardId))) {
         gameState.markCardAsRead(cardId);
         cardManager.updateCardReadStatus(cardId, true);
 
@@ -1651,11 +1660,12 @@ function displayCard(card) {
             // 标记为已读
             if (!gameState.isCardRead(completedCardId)) {
                 gameState.markCardAsRead(completedCardId);
-                cardManager.updateCardReadStatus(completedCardId, true);
 
                 // 检查并解锁指令
                 checkAndUnlockCommands(completedCardId);
             }
+            // unlock() 也会保存已读状态，仍需同步卡片，避免重复逐行播放。
+            cardManager.updateCardReadStatus(completedCardId, true);
 
             // 阅读 file_010 (README) 后 1 秒启动心电图
             if (completedCardId === 'file_010' && window.ecgController && !window._ecgStarted) {
@@ -1666,17 +1676,7 @@ function displayCard(card) {
                 }, 1000);
             }
 
-            // 阅读 file_015 后激活 delete stage1
-            if (completedCardId === 'file_015') {
-                gameState.setDeleteStage('stage1');
-                console.log('[Delete System] Stage 1 activated after reading file_015');
-            }
-
-            // 阅读 file_016 后激活 delete stage2
-            if (completedCardId === 'file_016') {
-                gameState.setDeleteStage('stage2');
-                console.log('[Delete System] Stage 2 activated after reading file_016');
-            }
+            // 删除阶段由 markCardAsRead 与已读进度一起更新并保存。
 
             // 刷新UI
             refreshUI();
@@ -2094,6 +2094,9 @@ function refreshUI(scrollListToBottom = true) {
     // 更新Tab未读指示器
     if (renderer && renderer.updateTabIndicators) {
         renderer.updateTabIndicators(cardManager, gameState);
+    }
+    if (memoryDecay && gameState.getState().awakening_started) {
+        memoryDecay.renderAwakeningProgress();
     }
 }
 
