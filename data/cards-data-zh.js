@@ -2671,7 +2671,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "点击线索词，或在终端中打字输入线索，然后使用回车键，或点击[搜索]按钮。",
+          "text": "点击[线索]中的词语，然后点击[搜索]按钮。",
           "style": "default",
           "breakAfter": true
         },
