@@ -3170,14 +3170,14 @@ window.CARDS_DATA = {
       "new_clues": [],
       "unlock_type": "question",
       "unlock_condition": {
-        "question": "输入 A B",
+        "question": "输入 A B（两个词语，用空格分隔）",
         "answer": [
           "bookstore father",
           "father bookstore",
           "书店 父亲",
           "父亲 书店"
         ],
-        "preview_lines": 30,
+        "preview_lines": 24,
         "hint": "监测到记忆5, 10, 21出现关联神经脉冲"
       },
       "content": [
@@ -3210,7 +3210,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "可证明的是，仍然存在关键记忆，然而已被压抑在水面之下。",
+          "text": "可证明的是，仍然存在关键记忆，但被压抑在水面之下。",
           "style": "default",
           "breakAfter": true
         },
@@ -3219,31 +3219,17 @@ window.CARDS_DATA = {
           "style": "default"
         },
         {
-          "text": "基于脑电分析，已被解析的记忆间存在矛盾。",
+          "text": "系统已标明以下记忆：5，10，21",
           "style": "default",
           "breakAfter": true
         },
         {
-          "text": "例如：戈尔真的杀死了山茶吗？",
+          "text": "这些记忆相对于其他记忆，包含两处明显的矛盾。",
           "style": "default",
           "breakAfter": true
         },
         {
-          "text": "仪器的确获取了戈尔亲手杀害山茶的记忆。",
-          "style": "default",
-          "breakAfter": true
-        },
-        {
-          "text": "但在那之后，戈尔带山茶逃跑的记忆，也同样存在。",
-          "style": "default",
-          "breakAfter": true
-        },
-        {
-          "text": "",
-          "style": "default"
-        },
-        {
-          "text": "除此之外，还存在两处明显的矛盾。",
+          "text": "如果指明这些矛盾，或许能进一步挖掘戈尔的记忆。",
           "style": "default",
           "breakAfter": true
         },
@@ -3302,25 +3288,6 @@ window.CARDS_DATA = {
         },
         {
           "text": "B的表现出人意料，似乎完全不认识戈尔。",
-          "style": "default",
-          "breakAfter": true
-        },
-        {
-          "text": "",
-          "style": "default"
-        },
-        {
-          "text": "如果找到这两处关键矛盾，或许可以进一步挖掘戈尔的记忆。",
-          "style": "default",
-          "breakAfter": true
-        },
-        {
-          "text": "请重新回顾记忆，将A和B作为答案输入（两个词语，用空格分隔）。",
-          "style": "default",
-          "breakAfter": true
-        },
-        {
-          "text": "A是一个地点，B是一个人。",
           "style": "default",
           "breakAfter": true
         },
