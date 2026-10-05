@@ -891,9 +891,11 @@ function handleSearchMode() {
         const input = document.querySelector('.command-input');
         const command = input?.value.trim();
         if (command) {
-            input.value = '';
+            if (currentMode !== 'delete' && !/^\/?delete\b/i.test(command)) input.value = '';
             if (window.updateCursorPosition) window.updateCursorPosition();
             processCommand(command);
+            if (!deleteConfirmationModal) input.value = '';
+            if (window.updateCursorPosition) window.updateCursorPosition();
         }
         return;
     }
@@ -1005,9 +1007,11 @@ function handleSortMode() {
         const input = document.querySelector('.command-input');
         const command = input?.value.trim();
         if (command) {
-            input.value = '';
+            if (currentMode !== 'delete' && !/^\/?delete\b/i.test(command)) input.value = '';
             if (window.updateCursorPosition) window.updateCursorPosition();
             processCommand(command);
+            if (!deleteConfirmationModal) input.value = '';
+            if (window.updateCursorPosition) window.updateCursorPosition();
         }
         return;
     }
@@ -1030,9 +1034,11 @@ function handleDeleteMode() {
         const input = document.querySelector('.command-input');
         const command = input?.value.trim();
         if (command) {
-            input.value = '';
+            if (currentMode !== 'delete' && !/^\/?delete\b/i.test(command)) input.value = '';
             if (window.updateCursorPosition) window.updateCursorPosition();
             processCommand(command);
+            if (!deleteConfirmationModal) input.value = '';
+            if (window.updateCursorPosition) window.updateCursorPosition();
         }
         return;
     }
@@ -1103,14 +1109,16 @@ function handleCommandInput(event) {
 
     if (!command) return;
 
-    // 清空输入框并重置光标位置
-    input.value = '';
+    // 删除确认取消时保留原始输入。
+    if (currentMode !== 'delete' && !/^\/?delete\b/i.test(command)) input.value = '';
     if (window.updateCursorPosition) {
         window.updateCursorPosition();
     }
 
     // 处理命令
     processCommand(command);
+    if (!deleteConfirmationModal) input.value = '';
+    if (window.updateCursorPosition) window.updateCursorPosition();
 }
 
 /**
@@ -1282,6 +1290,7 @@ function processDeleteWordInput(input) {
  * 处理命令
  */
 function processCommand(command) {
+    if (deleteConfirmationModal) return;
     // 检查输入锁定
     if (inputLocked) {
         return;
@@ -2786,10 +2795,78 @@ function handleScrambleCommand(command) {
     }
 }
 
+let deleteConfirmationModal = null;
+
+/** 两个删除阶段共用弹窗；取消不消费输入，也不推进剧情。 */
+function showDeleteConfirmationModal() {
+    if (deleteConfirmationModal) return;
+    const pending = gameState.getPendingConfirmation();
+    if (!pending || !['delete1', 'delete2'].includes(pending.type)) return;
+    const input = document.querySelector('.command-input');
+    const originalInput = input ? input.value : '';
+    const zh = currentLang === 'zh';
+    const overlay = document.createElement('div');
+    overlay.className = 'reset-modal-overlay active delete-confirm-overlay';
+    const modal = document.createElement('div');
+    modal.className = 'reset-modal delete-confirm-modal';
+    modal.setAttribute('role', 'dialog');
+    modal.setAttribute('aria-modal', 'true');
+    modal.setAttribute('aria-labelledby', 'delete-confirm-title');
+    modal.setAttribute('aria-describedby', 'delete-confirm-message');
+    const title = document.createElement('h2');
+    title.id = 'delete-confirm-title';
+    title.className = 'awakening-confirm-title';
+    title.textContent = 'MIND MIRROR';
+    const message = document.createElement('p');
+    message.id = 'delete-confirm-message';
+    message.className = 'reset-warning awakening-confirm-message';
+    message.textContent = zh ? '确认删除吗？' : 'Confirm deletion?';
+    const actions = document.createElement('div');
+    actions.className = 'reset-modal-buttons';
+    const yes = document.createElement('button');
+    yes.className = 'reset-btn confirm';
+    yes.textContent = zh ? '是' : 'Yes';
+    const no = document.createElement('button');
+    no.className = 'reset-btn cancel';
+    no.textContent = zh ? '否' : 'No';
+    const close = confirmed => {
+        if (deleteConfirmationModal !== overlay) return;
+        overlay.remove();
+        deleteConfirmationModal = null;
+        confirmationLocked = false;
+        gameState.clearPendingConfirmation();
+        if (input) {
+            input.value = confirmed ? '' : originalInput;
+            if (window.updateCursorPosition) window.updateCursorPosition();
+        }
+        if (confirmed) handleYesConfirmation(pending);
+        else updateDeleteModePrompt();
+        if (input) input.focus();
+    };
+    yes.onclick = () => close(true);
+    no.onclick = () => close(false);
+    overlay.onclick = event => { if (event.target === overlay) close(false); };
+    overlay.onkeydown = event => {
+        if (event.key === 'Escape') { event.preventDefault(); close(false); }
+        if (event.key === 'Tab') {
+            event.preventDefault();
+            (document.activeElement === yes ? no : yes).focus();
+        }
+    };
+    actions.append(yes, no);
+    modal.append(title, message, actions);
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    deleteConfirmationModal = overlay;
+    confirmationLocked = true;
+    yes.focus();
+}
+
 /**
  * 处理Delete命令
  */
 function handleDeleteCommand(command) {
+    if (deleteConfirmationModal) return;
     const deleteStage = gameState.getDeleteStage();
     const pendingConfirmation = gameState.getPendingConfirmation();
 
@@ -2918,7 +2995,7 @@ function handleDeleteStage1(arg) {
             type: 'delete1',
             data: { memoryNumber: 18 }
         });
-        showConfirmPrompt('are_you_sure');
+        showDeleteConfirmationModal();
         return;
     }
 
@@ -2957,7 +3034,7 @@ function handleDeleteStage2(arg) {
             type: 'delete2',
             data: { word: word }
         });
-        showConfirmPrompt('are_you_sure');
+        showDeleteConfirmationModal();
         return;
     }
 

@@ -71,7 +71,7 @@ for (const [id, stage, input] of [['file_015', 'stage1', '18'], ['file_016', 'st
         assert.equal(h.saved().unlocked_commands.includes(stage === 'stage1' ? '/delete index' : '/delete word'), true);
         h.run(`
             showFeedback = message => { throw new Error('Unexpected error: ' + message); };
-            showConfirmPrompt = () => {};
+            showDeleteConfirmationModal = () => {};
             currentMode = 'delete';
             processCommand('${input}');
         `);
@@ -84,3 +84,35 @@ test('stage two never regresses when first instruction is read later', () => {
     h.run("gameState.markCardAsRead('file_016'); gameState.markCardAsRead('file_015')");
     assert.equal(h.saved().delete_stage, 'stage2');
 });
+
+for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶']]) {
+    test(stage + ': popup cancel preserves mode and exact input; yes advances once', () => {
+        const h = harness({delete_stage: stage, unlocked_commands: stage === 'stage1' ? ['/delete index'] : ['/delete index', '/delete word']});
+        h.run(`
+            gameState.loadState(); currentMode = 'delete'; currentLang = 'zh';
+            var input = {value: '  ${answer}  ', focus() {}};
+            document.querySelector = selector => selector === '.command-input' ? input : null;
+            document.createElement = () => ({children: [], setAttribute(){}, focus(){}, remove(){this.removed = true;}, append(...items){this.children.push(...items);}, appendChild(item){this.children.push(item);}});
+            document.body = {appendChild(){}};
+            updateDeleteModePrompt = () => {};
+            var animations = 0, namePrompts = 0;
+            playDeletionAnimation1 = () => animations++;
+            showConfirmPrompt = type => { if(type === 'enter_name') namePrompts++; };
+            handleDeleteMode();
+        `);
+        assert.equal(h.run('deleteConfirmationModal.children[0].children[0].textContent'), 'MIND MIRROR');
+        assert.equal(h.run('deleteConfirmationModal.children[0].children[1].textContent'), '确认删除吗？');
+        h.run('processCommand("y"); handleDeleteCommand("yes")');
+        assert.equal(h.run('animations + namePrompts'), 0);
+        h.run('deleteConfirmationModal.children[0].children[2].children[1].onclick()');
+        assert.equal(h.run('gameState.getPendingConfirmation()'), null);
+        assert.equal(h.run('confirmationLocked'), false);
+        assert.equal(h.run('currentMode'), 'delete');
+        assert.equal(h.run('input.value'), '  ' + answer + '  ');
+        h.run('handleDeleteMode(); var yes = deleteConfirmationModal.children[0].children[2].children[0]; yes.onclick(); yes.onclick()');
+        assert.equal(h.run('deleteConfirmationModal'), null);
+        assert.equal(h.run('input.value'), '');
+        assert.equal(h.run('animations + namePrompts'), 1);
+        if (stage === 'stage2') assert.equal(h.run('gameState.getPendingConfirmation().type'), 'name_input');
+    });
+}

@@ -1026,3 +1026,13 @@ body.reading-mode .system-output {
   text-shadow: 0 0 5px currentColor;
   font-weight: bold;
 }
+
+/* 删除确认沿用删除模式的红色主题。 */
+.delete-confirm-overlay { --phosphor-primary: #cc4444; color: var(--phosphor-primary); }
+.delete-confirm-modal { box-shadow: 0 0 20px rgba(204, 68, 68, .3), inset 0 0 10px rgba(0, 0, 0, .5); }
+.delete-confirm-modal .reset-btn:hover,
+.delete-confirm-modal .reset-btn:focus-visible {
+  background-color: var(--phosphor-primary);
+  border-color: var(--phosphor-primary);
+  color: #0a0a0a;
+}
