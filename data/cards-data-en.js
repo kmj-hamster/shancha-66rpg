@@ -427,6 +427,7 @@ window.CARDS_DATA = {
         "question": "What project is the secret document carried by the defector about?",
         "answer": ["Project Iron", "Iron"],
         "preview_lines": 1,
+        "hint_cards": ["mem_013"],
         "hint": "Neural pulses detected in Memory 13"
       },
       "content": [
@@ -769,6 +770,7 @@ window.CARDS_DATA = {
         "question": "If you lose your ████, are you still you?",
         "answer": ["memory", "no"],
         "preview_lines": 2,
+        "hint_cards": ["mem_011"],
         "hint": "Neural pulses detected in Memory 11"
       },
       "content": [
@@ -2067,6 +2069,7 @@ window.CARDS_DATA = {
         "question": "What cognitive disorder does Gregor suffer from?",
         "answer": ["ad", "alzheimer’s disease", "alzheimer", "alzheimer's disease","alzheimer's","alzheimer’s",'alzheimers'],
         "preview_lines": 8,
+        "hint_cards": ["file_007","file_008","file_009"],
         "hint": "Correlated signal detected in Son's Diary"
       },
       "content": [
@@ -3220,6 +3223,7 @@ window.CARDS_DATA = {
         "mem_023"
       ],
       "new_clues": [],
+      "read_highlights": ["mem_005", "mem_010", "mem_021"],
       "unlock_type": "question",
       "unlock_condition": {
         "question": "Type X Y",
@@ -3228,6 +3232,7 @@ window.CARDS_DATA = {
           "father bookstore"
         ],
         "preview_lines": 30,
+        "hint_cards": ["mem_005","mem_010","mem_021"],
         "hint": "Neural pulses detected in Memory 5, 10, 21"
       },
       "content": [

@@ -448,6 +448,7 @@ window.CARDS_DATA = {
           "铁人"
         ],
         "preview_lines": 1,
+        "hint_cards": ["mem_013"],
         "hint": "监测到记忆13出现关联神经脉冲"
       },
       "content": [
@@ -815,6 +816,7 @@ window.CARDS_DATA = {
           "不"
         ],
         "preview_lines": 2,
+        "hint_cards": ["mem_011"],
         "hint": "监测到记忆11出现关联神经脉冲"
       },
       "content": [
@@ -2149,6 +2151,7 @@ window.CARDS_DATA = {
           "老年痴呆症"
         ],
         "preview_lines": 8,
+        "hint_cards": ["file_007","file_008","file_009"],
         "hint": "监测到Son's Diary出现关联信号"
       },
       "content": [
@@ -3168,6 +3171,7 @@ window.CARDS_DATA = {
         "mem_023"
       ],
       "new_clues": [],
+      "read_highlights": ["mem_005", "mem_010", "mem_021"],
       "unlock_type": "question",
       "unlock_condition": {
         "question": "输入 A B（两个词语，用空格分隔）",
@@ -3178,6 +3182,7 @@ window.CARDS_DATA = {
           "父亲 书店"
         ],
         "preview_lines": 24,
+        "hint_cards": ["mem_005","mem_010","mem_021"],
         "hint": "监测到记忆5, 10, 21出现关联神经脉冲"
       },
       "content": [

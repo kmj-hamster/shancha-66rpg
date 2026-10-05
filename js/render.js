@@ -468,6 +468,7 @@ class Renderer {
         cards.forEach((card, index) => {
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item';
+            if (gameState.highlightedCards.has(card.id)) fileItem.classList.add('title-highlight');
 
             // 设置状态样式
             const statusClass = this.getCardStatusClass(card, gameState);
@@ -822,6 +823,7 @@ class Renderer {
 
         // 事件处理
         const handleSubmit = () => {
+            gameState.clearCardHighlights();
             const answer = answerInput.value.trim();
             if (!answer) {
                 const lang = localStorage.getItem('gameLang') || 'en';

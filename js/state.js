@@ -56,6 +56,26 @@ const DEFAULT_STATE = {
 class GameState {
     constructor() {
         this.initializeState();
+        this.highlightedCards = new Set();
+    }
+
+    /** 临时导航提示不写入存档，列表重绘时仍然保留。 */
+    highlightCards(ids) {
+        for (const id of ids || []) this.highlightedCards.add(id);
+        this.updateCardHighlights();
+    }
+
+    clearCardHighlights(id) {
+        if (id) this.highlightedCards.delete(id);
+        else this.highlightedCards.clear();
+        this.updateCardHighlights();
+    }
+
+    updateCardHighlights() {
+        if (typeof document === 'undefined') return;
+        document.querySelectorAll('.file-item[data-card-id]').forEach(item => {
+            item.classList.toggle('title-highlight', this.highlightedCards.has(item.getAttribute('data-card-id')));
+        });
     }
 
     /**
@@ -742,6 +762,7 @@ class GameState {
             const card = byId.get(id);
             if (card?.unlock_type === 'direct' ||
                 (card?.unlock_type === 'count' && count >= card.unlock_condition.required_cards)) {
+                if (card.unlock_type === 'count' && !s.unlocked_cards.includes(id)) this.highlightCards([id]);
                 add('unlocked_cards', id);
             }
         }

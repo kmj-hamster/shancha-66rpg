@@ -289,3 +289,33 @@ for (const lang of ['zh', 'en']) {
         assert.equal(h.run('span.dataset.clue'), clue);
     });
 }
+
+for (const lang of ['zh', 'en']) {
+    test(lang + ': count threshold highlights once and clicks consume the hint', () => {
+        const h = boot({discovered_cards: ['mem_001','mem_002','mem_003','mem_004','mem_005','mem_006','mem_008','mem_009']}, lang);
+        assert.equal(h.run('gameState.highlightedCards.has("mem_003")'), true);
+        h.run('gameState.clearCardHighlights("mem_003"); gameState.reconcileProgress(cardManager.getAllCards(), COMMAND_UNLOCK_MAP)');
+        assert.equal(h.run('gameState.highlightedCards.has("mem_003")'), false);
+        h.run('gameState.highlightCards(["mem_003", "mem_005"]); handleFileClick({target:{closest:()=>({getAttribute:()=>"mem_003"})}})');
+        assert.equal(h.run('gameState.highlightedCards.has("mem_003")'), false);
+        assert.equal(h.run('gameState.highlightedCards.has("mem_005")'), true);
+    });
+
+    test(lang + ': wrong answers replace highlights with hint targets; correct answers clear them', () => {
+        const h = boot({discovered_cards: ['mem_007','mem_012','file_005','file_018']}, lang);
+        for (const [id, targets] of Object.entries({mem_007:['mem_013'], mem_012:['mem_011'], file_005:['file_007','file_008','file_009'], file_018:['mem_005','mem_010','mem_021']})) {
+            h.run('unlockManager.verifyAnswer(' + JSON.stringify(id) + ', "wrong")');
+            assert.deepEqual(Array.from(h.run('gameState.highlightedCards')), targets);
+        }
+        h.run('unlockManager.verifyAnswer("file_018", "bookstore father")');
+        assert.equal(h.run('gameState.highlightedCards.size'), 0);
+    });
+
+    test(lang + ': reading contradiction preview highlights 5, 10, 21 before any answer', () => {
+        const h = boot({discovered_cards: ['file_018']}, lang);
+        h.run('document.querySelector = selector => selector === ".text-content" ? document.createElement("div") : null; renderer.renderCardContent = () => { renderer.lineByLineController = {}; }; renderer.renderQuestionUI = () => {}; displayCard(cardManager.getCardById("file_018")); renderer.lineByLineController.onPreviewComplete()');
+        assert.deepEqual(Array.from(h.run('gameState.highlightedCards')), ['mem_005','mem_010','mem_021']);
+        assert.equal(h.save().unlocked_cards.includes('file_018'), false);
+        assert.equal(h.save().read_cards.includes('file_018'), false);
+    });
+}

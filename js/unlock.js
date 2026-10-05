@@ -100,6 +100,7 @@ class UnlockManager {
             // 满足条件，解锁卡片
             this.cardManager.updateCardStatus(cardId, 'unlocked');
             this.gameState.unlockCard(cardId);
+            this.gameState.highlightCards([cardId]);
 
             return {
                 success: true,
@@ -183,6 +184,7 @@ class UnlockManager {
      * @returns {Object} 验证结果
      */
     verifyAnswer(cardId, answer) {
+        this.gameState.clearCardHighlights();
         console.log(`[UnlockManager] verifyAnswer called for cardId: ${cardId}, answer: ${answer}`);
 
         // 🔧 修复：不依赖内存中的pendingQuestions，直接从卡片验证
@@ -266,6 +268,7 @@ class UnlockManager {
             };
         } else {
             // 答案错误
+            this.gameState.highlightCards(card.unlock_condition.hint_cards);
             console.log(`[UnlockManager] Incorrect answer. Got: ${answer}`);
             return {
                 success: false,
@@ -330,6 +333,7 @@ class UnlockManager {
                     this.cardManager.updateCardStatus(cardId, 'unlocked');
                     this.gameState.unlockCard(cardId);
                     newlyUnlocked.push(cardId);
+                    this.gameState.highlightCards([cardId]);
 
                     // 触发解锁提醒（红→蓝）- 注释掉：游戏启动时不显示提示
                     // this.notifyCardUnlock(card);

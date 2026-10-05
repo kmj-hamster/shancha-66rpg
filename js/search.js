@@ -219,6 +219,7 @@ class SearchEngine {
             // 如果是直接解锁，也标记为已解锁
             if (newStatus === 'unlocked') {
                 this.gameState.unlockCard(cardId);
+                if (card.unlock_type === 'count') this.gameState.highlightCards([cardId]);
             }
         }
 
@@ -245,6 +246,7 @@ class SearchEngine {
                     // 解锁卡片
                     this.cardManager.updateCardStatus(card.id, 'unlocked');
                     this.gameState.unlockCard(card.id);
+                    this.gameState.highlightCards([card.id]);
 
                     console.log(`[SearchEngine] Card ${card.id} unlocked by count condition`);
                 }

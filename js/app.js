@@ -1452,6 +1452,8 @@ function updateTabUI(tabName) {
 function handleFileClick(event) {
     const fileItem = event.target.closest('.file-item');
     if (!fileItem) return;
+    const clickedId = fileItem.getAttribute('data-card-id');
+    if (clickedId) gameState.clearCardHighlights(clickedId);
 
     // 检查是否处于阅读锁定状态
     if (readingLockManager && readingLockManager.isLocked()) {
@@ -1480,6 +1482,8 @@ function handleFileClick(event) {
     let card = cardManager.getCardById(cardId);
     if (!card) return;
 
+    gameState.clearCardHighlights(cardId);
+
     // 检查卡片状态并处理解锁
     if (card.status === 'locked') {
         // 尝试解锁
@@ -1502,6 +1506,8 @@ function handleFileClick(event) {
         return;
     }
 
+    // 点击即消费提示，包括本次点击刚满足数量条件的情况。
+    gameState.clearCardHighlights(cardId);
     // 显示卡片内容
     displayCard(card);
 
@@ -1834,11 +1840,13 @@ function displayCard(card) {
                 if (!hasShownPreview && renderer.lineByLineController) {
                     // 设置预览完成后显示问答UI
                     renderer.lineByLineController.onPreviewComplete = () => {
+                        gameState.highlightCards(card.read_highlights);
                         gameState.addPreviewShown(card.id);  // 🔧 标记预览已显示（持久化）
                         renderer.renderQuestionUI(textContent, questionData, handleSubmit);
                     };
                 } else {
                     // 已显示过预览，直接显示问答UI
+                    gameState.highlightCards(card.read_highlights);
                     renderer.renderQuestionUI(textContent, questionData, handleSubmit);
                 }
             }
