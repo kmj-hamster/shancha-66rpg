@@ -2763,7 +2763,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "To sort by ID (the default order), enter DEFAULT.",
+          "text": "To sort by ID, enter DEFAULT.",
           "style": "default",
           "breakAfter": true
         }

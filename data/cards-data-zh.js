@@ -2788,7 +2788,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "如果想按照 ID 排序（默认），输入 DEFAULT。",
+          "text": "如果想按照 ID 排序，输入 DEFAULT。",
           "style": "default",
           "breakAfter": true
         }
