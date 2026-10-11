@@ -1025,6 +1025,12 @@ body.reading-mode .system-output {
   font-weight: bold;
 }
 
+/* 已读提示临时提亮；点击取消高亮后恢复原有 40% 不透明度。 */
+.file-item.read.title-highlight .file-name {
+  opacity: 0.85;
+}
+
+
 /* 删除确认沿用删除模式的红色主题。 */
 .delete-confirm-overlay { --phosphor-primary: #cc4444; color: var(--phosphor-primary); }
 .delete-confirm-modal { box-shadow: 0 0 20px rgba(204, 68, 68, .3), inset 0 0 10px rgba(0, 0, 0, .5); }
