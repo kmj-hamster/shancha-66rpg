@@ -1023,6 +1023,7 @@ body.reading-mode .system-output {
 .file-item.title-highlight .file-name {
   text-shadow: 0 0 5px currentColor;
   font-weight: bold;
+  animation: title-highlight-breathe 2.6s ease-in-out infinite;
 }
 
 /* 已读提示临时提亮；点击取消高亮后恢复原有 40% 不透明度。 */
@@ -1039,4 +1040,14 @@ body.reading-mode .system-output {
   background-color: var(--phosphor-primary);
   border-color: var(--phosphor-primary);
   color: #0a0a0a;
+}
+
+/* 仅轻微改变文字辉光，不改变颜色或已读标题的不透明度。 */
+@keyframes title-highlight-breathe {
+  0%, 100% { text-shadow: 0 0 3px currentColor; }
+  50% { text-shadow: 0 0 7px currentColor; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-item.title-highlight .file-name { animation: none; }
 }
