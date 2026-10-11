@@ -2880,13 +2880,12 @@ window.CARDS_DATA = {
         }
 ,
         {
-          "text": "Carol, or should I say, Camellia.",
+          "text": "Carol, or rather, Camellia:",
           "style": "default",
           "breakAfter": true
-        }
-,
+        },
         {
-          "text": "How many times have I reviewed his memories?",
+          "text": "How many times have you reviewed his memories?",
           "style": "default",
           "breakAfter": true
         }

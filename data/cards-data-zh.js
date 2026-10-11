@@ -2873,12 +2873,12 @@ window.CARDS_DATA = {
           "style": "default"
         },
         {
-          "text": "珂赛特——或者应该说，山茶。",
+          "text": "珂赛特，或者说，山茶：",
           "style": "default",
           "breakAfter": true
         },
         {
-          "text": "我已经检视了他的记忆多少次了？",
+          "text": "你已经检视他的记忆多少次了？",
           "style": "default",
           "breakAfter": true
         },
