@@ -85,8 +85,8 @@ test('stage two never regresses when first instruction is read later', () => {
     assert.equal(h.saved().delete_stage, 'stage2');
 });
 
-for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶']]) {
-    test(stage + ': popup cancel preserves mode and exact input; yes advances once', () => {
+for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2', '珂赛特']]) {
+    test(stage + ': full-screen cancel preserves mode and exact input; yes advances once', () => {
         const h = harness({delete_stage: stage, unlocked_commands: stage === 'stage1' ? ['/delete index'] : ['/delete index', '/delete word']});
         h.run(`
             gameState.loadState(); currentMode = 'delete'; currentLang = 'zh';
@@ -97,11 +97,12 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶']]) {
             updateDeleteModePrompt = () => {};
             var animations = 0, namePrompts = 0;
             playDeletionAnimation1 = () => animations++;
+            playDeletionAnimation2 = () => animations++;
             showConfirmPrompt = type => { if(type === 'enter_name') namePrompts++; };
             handleDeleteMode();
         `);
-        assert.equal(h.run('deleteConfirmationModal.children[0].children[0].textContent'), 'MIND MIRROR');
-        assert.equal(h.run('deleteConfirmationModal.children[0].children[1].textContent'), '确认删除吗？');
+        assert.equal(h.run('deleteConfirmationModal.children[0].children[0].textContent'), stage === 'stage1' ? '删除 记忆18' : '删除 ' + answer);
+        assert.equal(h.run('deleteConfirmationModal.children[0].children[1].textContent'), '管理员：珂赛特');
         h.run('processCommand("y"); handleDeleteCommand("yes")');
         assert.equal(h.run('animations + namePrompts'), 0);
         h.run('deleteConfirmationModal.children[0].children[2].children[1].onclick()');
@@ -113,6 +114,7 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶']]) {
         assert.equal(h.run('deleteConfirmationModal'), null);
         assert.equal(h.run('input.value'), '');
         assert.equal(h.run('animations + namePrompts'), 1);
-        if (stage === 'stage2') assert.equal(h.run('gameState.getPendingConfirmation().type'), 'name_input');
+        assert.equal(h.run('gameState.getPendingConfirmation()'), null);
+        assert.equal(h.run('namePrompts'), 0);
     });
 }

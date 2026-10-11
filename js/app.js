@@ -2802,7 +2802,7 @@ function handleScrambleCommand(command) {
 
 let deleteConfirmationModal = null;
 
-/** 两个删除阶段共用弹窗；取消不消费输入，也不推进剧情。 */
+/** 两个删除阶段共用全屏确认页；取消恢复原界面和输入。 */
 function showDeleteConfirmationModal() {
     if (deleteConfirmationModal) return;
     const pending = gameState.getPendingConfirmation();
@@ -2811,29 +2811,33 @@ function showDeleteConfirmationModal() {
     const originalInput = input ? input.value : '';
     const zh = currentLang === 'zh';
     const overlay = document.createElement('div');
-    overlay.className = 'reset-modal-overlay active delete-confirm-overlay';
+    overlay.className = 'delete-confirm-screen';
     const modal = document.createElement('div');
-    modal.className = 'reset-modal delete-confirm-modal';
+    modal.className = 'delete-confirm-content';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', 'delete-confirm-title');
     modal.setAttribute('aria-describedby', 'delete-confirm-message');
     const title = document.createElement('h2');
     title.id = 'delete-confirm-title';
-    title.className = 'awakening-confirm-title';
-    title.textContent = 'MIND MIRROR';
+    title.className = 'delete-confirm-title';
+    const isCarol = ['carol', '珂赛特'].includes(pending.data.word);
+    const target = pending.type === 'delete1'
+        ? (zh ? '记忆18' : 'Memory 18')
+        : (isCarol ? (zh ? '珂赛特' : 'Carol') : (zh ? '山茶' : 'Camellia'));
+    title.textContent = (zh ? '删除 ' : 'Delete ') + target;
     const message = document.createElement('p');
     message.id = 'delete-confirm-message';
-    message.className = 'reset-warning awakening-confirm-message';
-    message.textContent = zh ? '确认删除吗？' : 'Confirm deletion?';
+    message.className = 'delete-confirm-admin';
+    message.textContent = zh ? '管理员：珂赛特' : 'Administrator: Carol';
     const actions = document.createElement('div');
-    actions.className = 'reset-modal-buttons';
+    actions.className = 'delete-confirm-actions';
     const yes = document.createElement('button');
-    yes.className = 'reset-btn confirm';
-    yes.textContent = zh ? '是' : 'Yes';
+    yes.className = 'delete-confirm-button';
+    yes.textContent = zh ? '确定' : 'Confirm';
     const no = document.createElement('button');
-    no.className = 'reset-btn cancel';
-    no.textContent = zh ? '否' : 'No';
+    no.className = 'delete-confirm-button';
+    no.textContent = zh ? '取消' : 'Cancel';
     const close = confirmed => {
         if (deleteConfirmationModal !== overlay) return;
         overlay.remove();
@@ -2850,7 +2854,6 @@ function showDeleteConfirmationModal() {
     };
     yes.onclick = () => close(true);
     no.onclick = () => close(false);
-    overlay.onclick = event => { if (event.target === overlay) close(false); };
     overlay.onkeydown = event => {
         if (event.key === 'Escape') { event.preventDefault(); close(false); }
         if (event.key === 'Tab') {
@@ -3061,12 +3064,9 @@ function handleYesConfirmation(confirmation) {
         gameState.clearPendingConfirmation();
         playDeletionAnimation1();
     } else if (confirmation.type === 'delete2') {
-        // 要求输入姓名
-        gameState.setPendingConfirmation({
-            type: 'name_input',
-            data: confirmation.data
-        });
-        showConfirmPrompt('enter_name');
+        // 全屏确认后直接进入第二次删除演出。
+        gameState.clearPendingConfirmation();
+        playDeletionAnimation2();
     } else if (confirmation.type === 'name_input') {
         // 这个不应该发生（name_input应该通过普通输入处理）
         showFeedback(TEXT.pleaseEnterName, 'info');
