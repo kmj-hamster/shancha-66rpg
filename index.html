@@ -447,7 +447,7 @@
           if (window.audioManager) {
             // 从存档读取BGM状态
             let bgmToPlay = 'Atmosphere';  // 默认BGM
-            const savedState = localStorage.getItem('gameState');
+            const savedState = localStorage.getItem(getGameStorageKey('gameState'));
 
             if (savedState) {
               try {
@@ -469,12 +469,7 @@
               if (bgmStarted) return;
               bgmStarted = true;
               console.log(`[Init] User interaction detected, starting ${bgmToPlay} BGM...`);
-              // Atmosphere 使用交叉淡入淡出循环播放，其他BGM普通播放
-              if (bgmToPlay === 'Atmosphere') {
-                audioManager.playMusicWithLoopFade('Atmosphere', 2000, 3000);  // 2秒初始淡入，3秒交叉淡入淡出
-              } else {
-                audioManager.playMusic(bgmToPlay, 1, 2000);  // 2秒淡入
-              }
+              audioManager.restoreMusic(bgmToPlay);
               // 清理监听器
               document.removeEventListener('click', startBGM);
               document.removeEventListener('keydown', startBGM);

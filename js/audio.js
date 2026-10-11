@@ -15,6 +15,8 @@ class AudioManager {
         // 背景音乐
         this.currentMusic = null;
         this.currentMusicId = null;
+        this.musicFadeIntervals = new Set();
+        this.fadingOutMusic = null;
 
         // 音效缓存
         this.sfxCache = new Map();
@@ -53,6 +55,26 @@ class AudioManager {
 
         // 跟踪所有活动的 interval（用于完整清理）
         this.activeIntervals = new Set();
+    }
+
+    _cancelMusicFades() {
+        for (const timer of this.musicFadeIntervals) clearInterval(timer);
+        this.musicFadeIntervals.clear();
+        if (this.fadingOutMusic && this.fadingOutMusic !== this.currentMusic) {
+            this.fadingOutMusic.pause();
+            this.fadingOutMusic.currentTime = 0;
+        }
+        this.fadingOutMusic = null;
+    }
+
+    /** 首次交互时优先保留卡片刚启动的音乐，不覆盖为旧存档曲目。 */
+    restoreMusic(musicId) {
+        if (this.currentMusic) {
+            if (this.currentMusic.paused) this.resumeMusic();
+            return;
+        }
+        if (musicId === 'Atmosphere') this.playMusicWithLoopFade(musicId, 2000, 3000);
+        else this.playMusic(musicId, 1, 2000);
     }
 
     /**
@@ -744,7 +766,11 @@ class AudioManager {
      * @param {number} duration - 淡化时长（毫秒），默认1000ms
      */
     switchMusic(musicId, duration = 1000) {
-        if (this.currentMusicId === musicId) return;
+        if (this.currentMusicId === musicId && this.currentMusic) {
+            if (this.currentMusic.paused) this.resumeMusic();
+            return;
+        }
+        this._cancelMusicFades();
 
         // iOS 使用简化版本（避免 setInterval volume 修改问题）
         if (this.isIOS) {
@@ -769,6 +795,7 @@ class AudioManager {
             if (this.loopFadeState.timeUpdateHandler && this.loopFadeState.currentAudio) {
                 this.loopFadeState.currentAudio.removeEventListener('timeupdate', this.loopFadeState.timeUpdateHandler);
             }
+            if (this.loopFadeState.endedHandler && oldMusic) oldMusic.removeEventListener('ended', this.loopFadeState.endedHandler);
             if (this.loopFadeState.nextAudio) {
                 if (this.loopFadeState.timeUpdateHandler) {
                     this.loopFadeState.nextAudio.removeEventListener('timeupdate', this.loopFadeState.timeUpdateHandler);
@@ -787,6 +814,9 @@ class AudioManager {
         newMusic.src = `${this.musicPath}${fileName}`;
         newMusic.loop = true;
         newMusic.volume = 0;
+        this.currentMusic = newMusic;
+        this.currentMusicId = musicId;
+        this.fadingOutMusic = oldMusic;
 
         if (!this.muted) {
             newMusic.play().catch(err => {
@@ -822,10 +852,11 @@ class AudioManager {
                     oldMusic.pause();
                     oldMusic.currentTime = 0;
                 }
-                this.currentMusic = newMusic;
-                this.currentMusicId = musicId;
+                this.musicFadeIntervals.delete(fade);
+                this.fadingOutMusic = null;
             }
         }, interval);
+        this.musicFadeIntervals.add(fade);
     }
 
     /**
@@ -833,6 +864,7 @@ class AudioManager {
      * @param {number} fadeOutDuration - 淡出时长（毫秒），默认0（立即停止）
      */
     stopMusic(fadeOutDuration = 0) {
+        this._cancelMusicFades();
         // 停止循环淡入淡出状态
         this.stopLoopFade();
 
@@ -1062,6 +1094,7 @@ class AudioManager {
      */
     fadeInMusic(targetVolume, duration) {
         if (!this.currentMusic) return;
+        const music = this.currentMusic;
 
         const steps = 20;
         const interval = duration / steps;
@@ -1069,19 +1102,22 @@ class AudioManager {
         let currentStep = 0;
 
         const fade = setInterval(() => {
-            if (!this.currentMusic) {
+            if (this.currentMusic !== music) {
                 clearInterval(fade);
+                this.musicFadeIntervals.delete(fade);
                 return;
             }
 
             currentStep++;
-            this.currentMusic.volume = Math.min(volumeStep * currentStep, targetVolume);
+            music.volume = Math.min(volumeStep * currentStep, targetVolume);
 
             if (currentStep >= steps) {
                 clearInterval(fade);
+                this.musicFadeIntervals.delete(fade);
                 console.log(`[AudioManager] ✅ Fade-in completed`);
             }
         }, interval);
+        this.musicFadeIntervals.add(fade);
     }
 
     /**
@@ -1089,6 +1125,7 @@ class AudioManager {
      * @param {number} duration - 淡出时长（毫秒）
      */
     fadeOutMusic(duration) {
+        this._cancelMusicFades();
         if (!this.currentMusic) return;
 
         const music = this.currentMusic;
@@ -1100,6 +1137,7 @@ class AudioManager {
         const fade = setInterval(() => {
             if (!music) {
                 clearInterval(fade);
+                this.musicFadeIntervals.delete(fade);
                 return;
             }
 
@@ -1109,6 +1147,7 @@ class AudioManager {
 
             if (currentStep >= steps) {
                 clearInterval(fade);
+                this.musicFadeIntervals.delete(fade);
                 music.pause();
                 music.currentTime = 0;
 
@@ -1124,6 +1163,7 @@ class AudioManager {
                 console.log(`[AudioManager] ✅ Fade-out completed`);
             }
         }, interval);
+        this.musicFadeIntervals.add(fade);
     }
 
     /**
