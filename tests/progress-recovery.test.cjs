@@ -380,3 +380,31 @@ for (const lang of ['zh', 'en']) {
         assert.equal(h.save().unlocked_cards.includes('file_005'), false, 'still requires the question answer');
     });
 }
+
+for (const phase of ['deletion2', 'decay']) {
+    test(phase + ': opening any music-triggering file cannot interrupt story BGM', () => {
+        const h = boot({story_phase: phase, current_bgm: 'Error.m4a'});
+        h.run(`
+            var musicCalls = [];
+            window.audioManager = {currentMusicId:'Error.m4a', switchMusic:id=>musicCalls.push(id)};
+            memoryDecay = {isActive: false};
+            Object.keys(CARD_BGM_MAP).forEach(id => displayCard(cardManager.getCardById(id)));
+        `);
+        assert.equal(h.run('musicCalls.length'), 0);
+        assert.equal(h.run('gameState.getCurrentBGM()'), 'Error.m4a');
+    });
+}
+
+test('active decay blocks card BGM until final memory phase restores normal switching', () => {
+    const h = boot({current_bgm: 'Error.m4a'});
+    h.run(`
+        var musicCalls = [];
+        window.audioManager = {currentMusicId:'Error.m4a', switchMusic:id=>musicCalls.push(id)};
+        memoryDecay = {isActive: true};
+        displayCard(cardManager.getCardById('file_018'));
+    `);
+    assert.equal(h.run('musicCalls.length'), 0);
+    h.run('gameState.advanceStoryPhase("final_memory"); memoryDecay.isActive = false; displayCard(cardManager.getCardById("mem_025"))');
+    assert.deepEqual(Array.from(h.run('musicCalls')), ['Dream']);
+    assert.equal(h.run('gameState.getCurrentBGM()'), 'Dream');
+});

@@ -1602,8 +1602,11 @@ function resumeStoryPhase() {
  * 显示卡片内容
  */
 function displayCard(card) {
+    // 删除演出与乱码阶段由剧情控制音乐，文件点击不能抢占或改写存档曲目。
+    const storyOwnsMusic = ['deletion2', 'decay'].includes(gameState.getStoryPhase()) ||
+        !!(memoryDecay && memoryDecay.isActive);
     // 🎵 检查是否需要切换BGM
-    if (CARD_BGM_MAP[card.id] && window.audioManager) {
+    if (!storyOwnsMusic && CARD_BGM_MAP[card.id] && window.audioManager) {
         const targetBGM = CARD_BGM_MAP[card.id];
         const currentBGM = audioManager.currentMusicId;
 
