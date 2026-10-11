@@ -173,21 +173,14 @@ function initLocalization() {
         unknownCommand: currentLang === 'zh' ? '未知指令' : 'Unknown command',
         cardLocked: currentLang === 'zh' ? '检测到心理防御机制：此记忆暂时无法解析。' : 'Defense mechanism detected: Memory temporarily inaccessible.',
         deleteNotAvailable: currentLang === 'zh' ? '删除不可用' : 'Delete not available',
-        operationCancelled: currentLang === 'zh' ? '操作已取消' : 'Operation cancelled',
         operationCompleted: currentLang === 'zh' ? '操作已完成' : 'Operation already completed',
 
         // 成功消息
         progressSaved: currentLang === 'zh' ? '进度已保存。' : 'Progress saved.',
         sortComplete: currentLang === 'zh' ? '排序完成！' : 'Sort complete!',
-        gameSaved: currentLang === 'zh' ? '游戏保存成功！' : 'Game saved successfully!',
-        gameLoaded: currentLang === 'zh' ? '游戏加载成功！' : 'Game loaded successfully!',
         hiddenMemoryUnlocked: currentLang === 'zh' ? '隐藏记忆浮现：91l-8m-obodp' : 'Hidden memory surfaced: 91l-8m-obodp',
 
         // 其他消息
-        saveFailed: currentLang === 'zh' ? '保存失败' : 'Failed to save game',
-        noSaveFound: currentLang === 'zh' ? '未找到存档' : 'No save file found',
-        yearDisplayOn: currentLang === 'zh' ? '年份显示：开' : 'Year display: ON',
-        yearDisplayOff: currentLang === 'zh' ? '年份显示：关' : 'Year display: OFF',
 
         // Sort 模式提示
         sortPromptTime: currentLang === 'zh' ? '> 输入 TIME 按时间排序，点击[排序]执行' : '> Type TIME to sort memories by time. Click [SORT] to execute',
@@ -200,14 +193,6 @@ function initLocalization() {
         // Delete 模式提示
         deletePromptWord: currentLang === 'zh' ? '> 输入要删除的词（非线索词），点击[删除]执行' : '> Type a WORD to delete (not from clue list). Click [DELETE] to execute',
         deletePromptNumber: currentLang === 'zh' ? '> 输入编号以删除对应记忆，点击[删除]执行' : '> Type a NUMBER to delete memory by ID. Click [DELETE] to execute',
-        deleteExample: currentLang === 'zh'
-            ? '例如，输入 /delete 1 删除记忆 1-8am-coffee'
-            : 'For example, enter /delete 1 to delete memory 1-8am-coffee',
-
-        // 确认对话
-        areYouSure: currentLang === 'zh' ? '确定吗？' : 'ARE YOU SURE?',
-        yesNo: '(yes / no)',
-        enterYourName: currentLang === 'zh' ? '输入你的名字:' : 'ENTER YOUR NAME:',
 
         // 排序结果
         sortedBy: currentLang === 'zh' ? '已按{type}排序' : 'Sorted by {type}',
@@ -222,22 +207,10 @@ function initLocalization() {
         notThisOneHurt: currentLang === 'zh'
             ? '不是这个。\n写给自己：我知道这一定很痛苦。'
             : 'Not this one.\nTo myself: I know this must hurt.',
-        incorrect: currentLang === 'zh' ? '答案错误。请重试。' : 'Incorrect. Try again.',
-        pleaseEnterName: currentLang === 'zh' ? '请输入你的名字' : 'Please enter your name',
 
         // Search 模式提示
         pressEnterToSearch: currentLang === 'zh' ? '点击[线索]中的词语，然后点击[搜索]' : 'Click a word in [CLUE], then click [SEARCH]',
         tapButtonToSearch: currentLang === 'zh' ? '点击[线索]中的词语，然后点击[搜索]' : 'Tap a word in [CLUE], then tap [SEARCH]',
-
-        // Scramble 相关
-        scrambleNotInit: currentLang === 'zh' ? '乱码特效未初始化' : 'Scramble effect not initialized',
-        decayNotInit: currentLang === 'zh' ? '记忆消失特效未初始化' : 'Memory decay effect not initialized',
-        decayStarted: currentLang === 'zh' ? '记忆消失已启动 - 20秒后完全消失' : 'Memory decay started - 20s until complete vanish',
-        decayStopped: currentLang === 'zh' ? '记忆消失已停止' : 'Memory decay stopped',
-        memoryRestored: currentLang === 'zh' ? '记忆已恢复' : 'Memory restored',
-        decayNotActive: currentLang === 'zh' ? '记忆消失未激活' : 'Memory decay is not active',
-        scrambleEnabled: currentLang === 'zh' ? '乱码特效已启用' : 'Scramble effect enabled',
-        scrambleDisabled: currentLang === 'zh' ? '乱码特效已禁用' : 'Scramble effect disabled',
 
         // 动画相关
         animNotAvailable: currentLang === 'zh' ? '动画系统不可用' : 'Animation system not available',
@@ -442,7 +415,7 @@ async function initApp() {
     }
 
     // 加载卡片数据
-    const loaded = await cardManager.loadCards('./data/cards.json');
+    const loaded = await cardManager.loadCards();
 
     if (!loaded) {
         console.error('[ERROR] Failed to load card data!');
@@ -801,64 +774,8 @@ function updateDeleteModePrompt() {
     systemOutputLines.length = 0;
 }
 
-/**
- * 显示确认提示（放大高亮）
- * @param {string} type - 'are_you_sure' | 'enter_name'
- */
-function showConfirmPrompt(type) {
-    const container = document.querySelector('.system-output');
-    if (!container) return;
-
-    const lines = container.querySelectorAll('.output-line');
-    const isMobile = isMobileLandscape();
-
-    if (type === 'are_you_sure') {
-        if (isMobile) {
-            // 手机端：合并成一行显示在 lines[1]
-            lines[0].textContent = '';
-            lines[1].textContent = `${TEXT.areYouSure} ${TEXT.yesNo}`;
-        } else {
-            // PC端：分两行显示
-            lines[0].textContent = TEXT.areYouSure;
-            lines[1].textContent = TEXT.yesNo;
-        }
-    } else if (type === 'enter_name') {
-        if (isMobile) {
-            // 手机端：显示在 lines[1]
-            lines[0].textContent = '';
-            lines[1].textContent = TEXT.enterYourName;
-        } else {
-            // PC端：显示在 lines[0]
-            lines[0].textContent = TEXT.enterYourName;
-            lines[1].textContent = '';
-        }
-    }
-
-    // 添加高亮类
-    lines.forEach(line => {
-        line.classList.add('confirm-highlight');
-        line.style.color = '';  // 使用主题色
-    });
-
-    // 锁定模式切换
-    confirmationLocked = true;
-
-    systemOutputLines.length = 0;
-}
-
-/**
- * 清除确认提示高亮
- */
-function clearConfirmPrompt() {
-    const container = document.querySelector('.system-output');
-    if (!container) return;
-
-    const lines = container.querySelectorAll('.output-line');
-    lines.forEach(line => {
-        line.classList.remove('confirm-highlight');
-    });
-
-    // 解除模式切换锁定
+/** 清除删除确认的模式切换锁。 */
+function clearConfirmationLock() {
     confirmationLocked = false;
 }
 
@@ -978,8 +895,8 @@ function executeReset() {
     }
 
     // 2. 清除所有游戏相关localStorage
-    localStorage.removeItem(getGameStorageKey('gameState'));
-    localStorage.removeItem(getGameStorageKey('saveTime'));
+    localStorage.removeItem('gameState');
+    localStorage.removeItem('saveTime');
     localStorage.removeItem('gameLang');
     localStorage.removeItem('introAnimationShown');
 
@@ -1228,26 +1145,7 @@ function showSortYearSuccess() {
  */
 function processDeleteModeInput(input) {
     const deleteStage = gameState.getDeleteStage();
-    const pendingConfirmation = gameState.getPendingConfirmation();
-
-    // 处理 yes/no 确认（同时接受 y/n 简写和中文 是/否）
-    const lowerInput = input.toLowerCase();
-    const isYes = lowerInput === 'yes' || lowerInput === 'y' || input === '是';
-    const isNo = lowerInput === 'no' || lowerInput === 'n' || input === '否';
-    if (isYes || isNo) {
-        if (pendingConfirmation) {
-            // 统一转换为 yes/no
-            const normalizedInput = isYes ? 'yes' : 'no';
-            handleDeleteCommand(normalizedInput);
-            return;
-        }
-    }
-
-    // 处理姓名输入
-    if (pendingConfirmation && pendingConfirmation.type === 'name_input') {
-        handleNameInput(input);
-        return;
-    }
+    if (deleteConfirmationModal) return;
 
     // Stage 1: 数字输入
     if (deleteStage === 'stage1') {
@@ -1310,13 +1208,6 @@ function processCommand(command) {
     }
 
     // === SEARCH 模式逻辑 ===
-
-    // 检查是否处于name_input等待状态
-    const pendingConfirmation = gameState.getPendingConfirmation();
-    if (pendingConfirmation && pendingConfirmation.type === 'name_input') {
-        handleNameInput(command);
-        return;
-    }
 
     // 去掉命令前的 / 前缀（如果有）
     const cmd = command.startsWith('/') ? command.slice(1) : command;
@@ -2201,99 +2092,6 @@ function handleSort(sortType) {
 }
 
 /**
- * 处理存档
- */
-function handleSave() {
-    // 清除delete系统的待确认状态
-    if (gameState.getPendingConfirmation()) {
-        gameState.clearPendingConfirmation();
-    }
-
-    const saved = gameState.saveState();
-    if (saved) {
-        showFeedback(TEXT.gameSaved, 'success');
-    } else {
-        showFeedback(TEXT.saveFailed, 'error');
-    }
-}
-
-/**
- * 处理读档
- */
-function handleLoad() {
-    // 清除delete系统的待确认状态
-    if (gameState.getPendingConfirmation()) {
-        gameState.clearPendingConfirmation();
-    }
-
-    const loaded = gameState.loadState();
-    if (loaded) {
-        gameState.reconcileProgress(cardManager.getAllCards(), COMMAND_UNLOCK_MAP);
-        gameState.saveState();
-        syncStateToCardManager();
-        showFeedback(TEXT.gameLoaded, 'success');
-        refreshUI();
-        resumeStoryPhase();
-    } else {
-        showFeedback(TEXT.noSaveFound, 'error');
-    }
-}
-
-/**
- * 处理年份显示命令
- */
-function handleYearCommand(command) {
-    // 清除delete系统的待确认状态
-    if (gameState.getPendingConfirmation()) {
-        gameState.clearPendingConfirmation();
-    }
-
-    const parts = command.split(' ');
-    const subCommand = parts[1]?.toLowerCase();
-
-    if (subCommand === 'on') {
-        gameState.setShowYear(true);
-        showFeedback(TEXT.yearDisplayOn, 'success');
-        // 如果当前有显示卡片，刷新显示
-        const currentCard = gameState.getState().current_card;
-        if (currentCard) {
-            const card = cardManager.getCardById(currentCard);
-            if (card) {
-                updateCardYear(card);
-            }
-        }
-    } else if (subCommand === 'off') {
-        gameState.setShowYear(false);
-        showFeedback(TEXT.yearDisplayOff, 'success');
-        // 隐藏年份显示
-        const yearDisplay = document.querySelector('.card-year');
-        if (yearDisplay) {
-            yearDisplay.style.display = 'none';
-        }
-    } else {
-        // 切换状态
-        const currentState = gameState.getState().show_year;
-        gameState.setShowYear(!currentState);
-        showFeedback(`Year display: ${!currentState ? 'ON' : 'OFF'}`, 'success');
-        // 刷新当前卡片显示
-        const currentCard = gameState.getState().current_card;
-        if (currentCard) {
-            const card = cardManager.getCardById(currentCard);
-            if (card) {
-                if (!currentState) {
-                    updateCardYear(card);
-                } else {
-                    const yearDisplay = document.querySelector('.card-year');
-                    if (yearDisplay) {
-                        yearDisplay.style.display = 'none';
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
  * 根据文件名找到卡片ID
  */
 function findCardIdByFileName(fileName) {
@@ -2708,107 +2506,6 @@ function switchToClueTab(clueToSelect = null) {
     }
 }
 
-/**
- * 处理乱码特效命令
- */
-function handleScrambleCommand(command) {
-    // 清除delete系统的待确认状态
-    if (gameState.getPendingConfirmation()) {
-        gameState.clearPendingConfirmation();
-    }
-
-    if (!scrambleEffect) {
-        showFeedback(TEXT.scrambleNotInit, 'error');
-        return;
-    }
-
-    const parts = command.split(' ');
-    const action = parts[1] || 'toggle';
-
-    // 处理decay子命令
-    if (action === 'decay') {
-        if (!memoryDecay) {
-            showFeedback(TEXT.decayNotInit, 'error');
-            return;
-        }
-
-        const subAction = parts[2] || 'status';
-        switch (subAction) {
-            case 'start':
-                memoryDecay.start();
-                showFeedback(TEXT.decayStarted, 'success');
-                break;
-
-            case 'stop':
-                memoryDecay.stop();
-                showFeedback(TEXT.decayStopped, 'success');
-                break;
-
-            case 'reset':
-                memoryDecay.reset();
-                showFeedback(TEXT.memoryRestored, 'success');
-                break;
-
-            case 'status':
-                const decayStatus = memoryDecay.getStatus();
-                if (decayStatus.isActive) {
-                    showFeedback(
-                        `🔥 Decay active: ${decayStatus.progress} complete, ` +
-                        `${decayStatus.retentionRate} visible, ` +
-                        `${decayStatus.timeRemaining} remaining`,
-                        'info'
-                    );
-                } else {
-                    showFeedback(TEXT.decayNotActive, 'info');
-                }
-                break;
-
-            default:
-                showFeedback('Usage: /scramble decay [start|stop|reset|status]', 'info');
-        }
-        return;
-    }
-
-    // 原有的scramble命令处理
-    switch (action) {
-        case 'on':
-        case 'enable':
-            scrambleEffect.enable();
-            showFeedback(TEXT.scrambleEnabled, 'success');
-            break;
-
-        case 'off':
-        case 'disable':
-            scrambleEffect.disable();
-            showFeedback(TEXT.scrambleDisabled, 'success');
-            break;
-
-        case 'toggle':
-            const isEnabled = scrambleEffect.toggle();
-            showFeedback(`Scramble effect ${isEnabled ? 'enabled' : 'disabled'}`, 'success');
-            break;
-
-        case 'exempt':
-            // 设置豁免文件，例如：/scramble exempt 1-city,2-fire
-            if (parts[2]) {
-                const files = parts[2].split(',').map(f => f.trim());
-                scrambleEffect.setExemptFiles(files);
-                showFeedback(`Exempt files set: ${files.join(', ')}`, 'success');
-            } else {
-                showFeedback('Usage: /scramble exempt file1,file2', 'info');
-            }
-            break;
-
-        case 'status':
-            const status = scrambleEffect.getStatus();
-            showFeedback(`Scramble: ${status.enabled ? 'ON' : 'OFF'}, Cache: ${status.cacheSize} items`, 'info');
-            break;
-
-        default:
-            showFeedback('Usage: /scramble [on|off|toggle|exempt|status|decay]', 'info');
-    }
-}
-
 let deleteConfirmationModal = null;
 
 /** 两个删除阶段共用全屏确认页；取消恢复原界面和输入。 */
@@ -2877,109 +2574,6 @@ function showDeleteConfirmationModal() {
     deleteConfirmationModal = overlay;
     confirmationLocked = true;
     yes.focus();
-}
-
-/**
- * 处理Delete命令
- */
-function handleDeleteCommand(command) {
-    if (deleteConfirmationModal) return;
-    const deleteStage = gameState.getDeleteStage();
-    const pendingConfirmation = gameState.getPendingConfirmation();
-
-    // 处理yes/no回答（同时接受 y/n 简写和中文 是/否）
-    const isYesCmd = command === 'yes' || command === 'y' || command === '是';
-    const isNoCmd = command === 'no' || command === 'n' || command === '否';
-    if (isYesCmd || isNoCmd) {
-        if (!pendingConfirmation) {
-            showFeedback(TEXT.unknownCommand, 'error');
-            return;
-        }
-
-        // 统一转换为 yes/no
-        const normalizedCommand = isYesCmd ? 'yes' : 'no';
-
-        if (normalizedCommand === 'no') {
-            // 取消操作
-            gameState.clearPendingConfirmation();
-            // 清除高亮样式并解锁
-            clearConfirmPrompt();
-            // 恢复 DELETE 模式提示
-            updateDeleteModePrompt();
-            return;
-        }
-
-        // 处理yes回答
-        if (normalizedCommand === 'yes') {
-            handleYesConfirmation(pendingConfirmation);
-            return;
-        }
-    }
-
-    // 处理/delete命令
-    if (deleteStage === 'inactive') {
-        showFeedback(TEXT.unknownCommand, 'error');
-        return;
-    }
-
-    // 只是输入 /delete
-    if (command === 'delete') {
-        // 如果有待确认状态，清除它（取消操作）
-        if (pendingConfirmation) {
-            gameState.clearPendingConfirmation();
-            showFeedback(TEXT.operationCancelled, 'info');
-        } else {
-            // 否则显示帮助
-            showDeleteHelp();
-        }
-        return;
-    }
-
-    // 解析 /delete 后的参数
-    const parts = command.split(' ');
-    if (parts[0] !== 'delete' || parts.length < 2) {
-        showFeedback(TEXT.unknownCommand, 'error');
-        return;
-    }
-
-    const arg = parts.slice(1).join(' ').trim();
-
-    // 第一阶段：只接受数字
-    if (deleteStage === 'stage1') {
-        handleDeleteStage1(arg);
-        return;
-    }
-
-    // 第二阶段：只接受单词
-    if (deleteStage === 'stage2') {
-        handleDeleteStage2(arg);
-        return;
-    }
-}
-
-/**
- * 显示Delete命令帮助
- */
-function showDeleteHelp() {
-    const deleteStage = gameState.getDeleteStage();
-
-    if (deleteStage === 'stage1') {
-        showFeedback(TEXT.deleteExample, 'success');
-    } else if (deleteStage === 'stage2') {
-        // 检查是否解锁了file delete-2
-        const hasDelete2 = gameState.isCardUnlocked('file_delete-2');
-
-        if (hasDelete2) {
-            const helpMsg = currentLang === 'zh'
-                ? TEXT.deleteExample + '\n\n' +
-                  '/delete word - 从记忆中删除某个概念的所有实例\n\n例如: /delete general\n注意: 该词不在线索列表中。'
-                : 'For example, enter /delete 1 to delete memory 1-8am-coffee\n\n' +
-                  '/delete word - Delete all instances of a concept from memory\n\nExample: /delete general\nNote: This word is not from the clue list.';
-            showFeedback(helpMsg, 'success');
-        } else {
-            showFeedback(TEXT.deleteExample, 'success');
-        }
-    }
 }
 
 /**
@@ -3064,9 +2658,7 @@ function handleDeleteStage2(arg) {
     showFeedback(randomMsg, 'info');
 }
 
-/**
- * 处理yes确认
- */
+/** 全屏确认后执行对应的删除动画。 */
 function handleYesConfirmation(confirmation) {
     if (confirmation.type === 'delete1') {
         // 播放删除动画一
@@ -3076,37 +2668,6 @@ function handleYesConfirmation(confirmation) {
         // 全屏确认后直接进入第二次删除演出。
         gameState.clearPendingConfirmation();
         playDeletionAnimation2();
-    } else if (confirmation.type === 'name_input') {
-        // 这个不应该发生（name_input应该通过普通输入处理）
-        showFeedback(TEXT.pleaseEnterName, 'info');
-    }
-}
-
-/**
- * 显示大字号反馈
- */
-function showFeedbackLarge(message, type = 'info') {
-    const feedbackText = document.querySelector('.feedback-text');
-    if (feedbackText) {
-        feedbackText.textContent = message;
-        feedbackText.className = 'feedback-text';
-
-        // 设置大字号
-        feedbackText.style.fontSize = '18px';
-        feedbackText.style.fontWeight = 'bold';
-
-        // 根据类型添加颜色
-        switch (type) {
-            case 'success':
-                feedbackText.style.color = '#3399FF';
-                break;
-            case 'error':
-                feedbackText.style.color = '#f00';
-                break;
-            case 'info':
-                feedbackText.style.color = '#ff0';
-                break;
-        }
     }
 }
 
@@ -3128,7 +2689,7 @@ function playDeletionAnimation1() {
     }
 
     // 清除确认提示高亮
-    clearConfirmPrompt();
+    clearConfirmationLock();
 
     // 锁定输入
     inputLocked = true;
@@ -3194,7 +2755,7 @@ function playDeletionAnimation2() {
     }
 
     // 清除确认提示高亮
-    clearConfirmPrompt();
+    clearConfirmationLock();
 
     // 锁定输入
     inputLocked = true;
@@ -3234,23 +2795,6 @@ function playDeletionAnimation2() {
         console.log('[Delete System] SORT and DELETE buttons hidden');
     };
     deletion2.run();
-}
-
-/**
- * 处理姓名输入
- */
-function handleNameInput(input) {
-    const name = input.trim().toLowerCase();
-
-    // 正确答案是carol或camellia（中文：山茶、珂赛特）
-    if (name === 'carol' || name === 'camellia' || name === '山茶' || name === '珂赛特') {
-        // 播放删除动画二
-        gameState.clearPendingConfirmation();
-        playDeletionAnimation2();
-    } else {
-        // 输入错误
-        showFeedback(TEXT.incorrect, 'error');
-    }
 }
 
 /**

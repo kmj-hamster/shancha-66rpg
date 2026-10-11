@@ -96,10 +96,9 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2'
             document.createElement = () => ({children: [], setAttribute(){}, focus(){}, remove(){this.removed = true;}, append(...items){this.children.push(...items);}, appendChild(item){this.children.push(item);}});
             document.body = {appendChild(){}};
             updateDeleteModePrompt = () => {};
-            var animations = 0, namePrompts = 0;
+            var animations = 0;
             playDeletionAnimation1 = () => animations++;
             playDeletionAnimation2 = () => animations++;
-            showConfirmPrompt = type => { if(type === 'enter_name') namePrompts++; };
             handleDeleteMode();
         `);
         assert.equal(h.run('screen.child === deleteConfirmationModal'), true);
@@ -107,8 +106,8 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2'
         assert.match(h.run('deleteConfirmationModal.children[0].children[2].children[0].className'), /opening-btn/);
         assert.equal(h.run('deleteConfirmationModal.children[0].children[0].textContent'), '删除');
         assert.equal(h.run('deleteConfirmationModal.children[0].children[1].textContent'), stage === 'stage1' ? '记忆18' : answer);
-        h.run('processCommand("y"); handleDeleteCommand("yes")');
-        assert.equal(h.run('animations + namePrompts'), 0);
+        h.run('processCommand("y"); processDeleteModeInput("yes")');
+        assert.equal(h.run('animations'), 0);
         h.run('deleteConfirmationModal.children[0].children[2].children[1].onclick()');
         assert.equal(h.run('gameState.getPendingConfirmation()'), null);
         assert.equal(h.run('confirmationLocked'), false);
@@ -117,8 +116,7 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2'
         h.run('handleDeleteMode(); var yes = deleteConfirmationModal.children[0].children[2].children[0]; yes.onclick(); yes.onclick()');
         assert.equal(h.run('deleteConfirmationModal'), null);
         assert.equal(h.run('input.value'), '');
-        assert.equal(h.run('animations + namePrompts'), 1);
+        assert.equal(h.run('animations'), 1);
         assert.equal(h.run('gameState.getPendingConfirmation()'), null);
-        assert.equal(h.run('namePrompts'), 0);
     });
 }

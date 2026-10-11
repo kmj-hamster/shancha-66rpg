@@ -40,7 +40,7 @@ function boot(saved, lang = 'zh') {
         readingLockManager = new ReadingLockManager(gameState);
         readingLockManager.disableInteractions = () => {};
         readingLockManager.enableInteractions = () => {};
-        refreshUI = () => {}; showFeedback = () => {}; clearConfirmPrompt = () => {};
+        refreshUI = () => {}; showFeedback = () => {}; clearConfirmationLock = () => {};
         gameState.reconcileProgress(cardManager.getAllCards(), COMMAND_UNLOCK_MAP);
         gameState.saveState(); syncStateToCardManager();
     `);

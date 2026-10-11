@@ -12,14 +12,13 @@ class CardManager {
 
     /**
      * 加载卡片数据
-     * @param {string} dataPath - 卡片数据文件路径（暂时保留参数，但不使用）
      * @returns {Promise<boolean>} 加载是否成功
      */
-    async loadCards(dataPath = 'data/cards.json') {
+    async loadCards() {
         try {
             // 直接使用全局CARDS_DATA对象（避免CORS问题）
             if (typeof CARDS_DATA === 'undefined') {
-                throw new Error('CARDS_DATA not found. Make sure cards-data.js is loaded.');
+                throw new Error('CARDS_DATA not found. Load cards-data-zh.js or cards-data-en.js first.');
             }
 
             const data = CARDS_DATA;
@@ -238,13 +237,10 @@ class CardManager {
     updateCardReadStatus(cardId, isRead) {
         const card = this.getCardById(cardId);
         if (!card) {
-            console.log(`[DEBUG] updateCardReadStatus: Card ${cardId} not found`);
             return false;
         }
 
-        const oldStatus = card.is_read;
         card.is_read = isRead;
-        console.log(`[DEBUG] Card ${cardId} read status changed: ${oldStatus} -> ${isRead}`);
         return true;
     }
 
@@ -430,28 +426,6 @@ class CardManager {
         });
     }
 
-    /**
-     * 调试用：打印卡片信息
-     * @param {string} cardId - 卡片ID（可选，不传则打印所有）
-     */
-    debugPrintCards(cardId = null) {
-        if (!this.isLoaded) {
-            console.log('Cards not loaded yet');
-            return;
-        }
-
-        if (cardId) {
-            const card = this.getCardById(cardId);
-            if (card) {
-                console.log('Card Info:', card);
-            } else {
-                console.log(`Card ${cardId} not found`);
-            }
-        } else {
-            console.log('All Cards:', this.cards);
-            console.log('Metadata:', this.metadata);
-        }
-    }
 }
 
 // 导出给其他模块使用

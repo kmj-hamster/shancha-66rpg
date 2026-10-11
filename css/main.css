@@ -367,11 +367,6 @@ body.reading-mode .system-output.awakening-progress-mode {
   opacity: 1;
 }
 
-.output-line.confirm-highlight {
-  font-weight: bold;
-  opacity: 1;
-}
-
 /* 输入行 - Input Line */
 .input-line {
   display: flex;

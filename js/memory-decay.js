@@ -996,7 +996,6 @@ class MemoryDecayEffect {
             const outputLines = systemOutput.querySelectorAll('.output-line');
             outputLines.forEach(line => {
                 line.textContent = '';
-                line.classList.remove('confirm-highlight');
             });
         }
 
