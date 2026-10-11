@@ -4,9 +4,30 @@ window.DEBUG_STORY_MODE = new URLSearchParams(window.location.search).get('debug
 
 function seedDebugStory(stage) {
     if (!window.DEBUG_STORY_MODE) throw new Error('Enable ?debug=1 first');
-    if (!['awakening', 'reading', 'reading90', 'ready', 'ending'].includes(stage)) throw new Error('Unknown debug stage');
+    if (!['delete1', 'delete2', 'awakening', 'reading', 'reading90', 'ready', 'ending'].includes(stage)) throw new Error('Unknown debug stage');
     const state = new GameState();
     state.state.game_started = true;
+    if (stage === 'delete1' || stage === 'delete2') {
+        // 删除前的完整探索进度；不提前暴露最终恢复的记忆19、25及以后。
+        const memories = Array.from({length: 24}, (_, i) => 'mem_' + String(i + 1).padStart(3, '0'))
+            .filter(id => id !== 'mem_019');
+        const files = Array.from({length: 18}, (_, i) => 'file_' + String(i + 1).padStart(3, '0'))
+            .filter(id => id !== 'file_016' || stage === 'delete2');
+        state.state.discovered_cards = [...memories, ...files];
+        state.state.unlocked_cards = [...state.state.discovered_cards];
+        state.state.read_cards = [...state.state.discovered_cards];
+        state.state.sort_year_used = true;
+        state.state.show_year = true;
+        state.state.current_bgm = 'Atmosphere';
+        state.state.unlocked_commands = ['/sort time', '/sort year', '/delete index'];
+        if (stage === 'delete2') {
+            state.state.unlocked_commands.push('/delete word');
+            state.advanceStoryPhase('after_deletion1', false);
+        }
+        state.reconcileStoryProgress();
+        if (!state.saveState()) throw new Error('Unable to save debug checkpoint');
+        return;
+    }
     state.state.read_cards = ['file_010', 'mem_025'];
     state.state.discovered_cards = ['file_010', 'mem_025'];
     state.state.unlocked_cards = ['file_010', 'mem_025'];
@@ -35,6 +56,7 @@ if (window.DEBUG_STORY_MODE) {
         title.textContent = '剧情测试 · 独立存档';
         panel.appendChild(title);
         for (const [target, label] of [
+            ['delete1', '删除阶段一 · 输入18'], ['delete2', '删除阶段二 · 输入山茶'],
             ['awakening', '重播复苏动画'], ['reading', '最终阅读 · 37.92%'],
             ['reading90', '最终阅读 · 89.34%'], ['ready', '唤醒按钮 · 100%'],
             ['ending', '直接播放结局'], [null, '退出测试，返回原存档']

@@ -34,12 +34,28 @@ for (const [stage, phase, progress] of [['awakening','awakening',37.92], ['readi
         assert.equal(h.storage.get('gameState_debug'), saved);
         h.listeners[0]();
         const buttons = h.children[0].children.slice(1);
-        assert.equal(buttons.length, 6);
-        buttons[5].onclick();
+        assert.equal(buttons.length, 8);
+        buttons[7].onclick();
         assert.equal(h.context.location.href, 'http://localhost/index.html');
         h.run('s.clearSavedState()');
         assert.equal(h.storage.has('gameState_debug'), false);
         assert.equal(h.storage.get('gameState'), 'original save');
         assert.equal(h.storage.get('saveTime'), 'original time');
+    });
+}
+
+for (const stage of ['delete1', 'delete2']) {
+    test(stage + ' starts before confirmation with deletion enabled and normal save intact', () => {
+        const h = boot('?debug=1&debugStage=' + stage);
+        h.run('var s = new GameState(); s.loadState()');
+        assert.equal(h.run('s.getDeleteStage()'), stage === 'delete1' ? 'stage1' : 'stage2');
+        assert.equal(h.run('s.getStoryPhase()'), stage === 'delete1' ? 'exploration' : 'after_deletion1');
+        assert.equal(h.run('s.isDeletion1Completed()'), stage === 'delete2');
+        assert.equal(h.run('s.isDeletion2Completed()'), false);
+        assert.equal(h.run('s.isCardRead("file_015")'), true);
+        assert.equal(h.run('s.isCardRead("file_016")'), stage === 'delete2');
+        assert.equal(h.run('s.isCardDiscovered("mem_025")'), false);
+        assert.equal(h.run('s.getPendingConfirmation()'), null);
+        assert.equal(h.storage.get('gameState'), 'original save');
     });
 }
