@@ -272,6 +272,9 @@ class Renderer {
                     return;
                 }
 
+                // 点击时检查，避免乱码开始前渲染的线索绕过限制。
+                if (window.isClueInteractionBlocked && window.isClueInteractionBlocked()) return;
+
                 // 切换到Clue标签页，并传入要选中的 clue
                 if (window.switchToClueTab) {
                     window.switchToClueTab(segment.clue || segment.text);

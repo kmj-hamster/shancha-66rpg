@@ -1423,7 +1423,7 @@ function handleTabSwitch(event) {
     }
 
     // 检查是否在decay期间点击clue tab
-    if (typeof memoryDecay !== 'undefined' && memoryDecay.isActive && tabName === 'clue') {
+    if (tabName === 'clue' && isClueInteractionBlocked()) {
         event.preventDefault();
         event.stopPropagation();
         return;
@@ -2616,11 +2616,19 @@ function deselectClue() {
     selectedClue = null;
 }
 
+/** 线索点击与标签切换共用限制，覆盖剧情恢复和已渲染的旧文本。 */
+function isClueInteractionBlocked() {
+    return disabledTabs.has('clue') ||
+        !!(memoryDecay && memoryDecay.isActive) ||
+        !!(gameState && ['deletion2', 'decay'].includes(gameState.getStoryPhase()));
+}
+
 /**
  * 填充线索词到输入框
  * @param {string} clueText - 线索词文本
  */
 function fillClueToInput(clueText) {
+    if (isClueInteractionBlocked()) return;
     // 阅读锁定时禁止填充
     if (readingLockManager && readingLockManager.isLocked()) {
         return;
@@ -2681,6 +2689,7 @@ function fillClueToInput(clueText) {
  * @param {string} clueToSelect - 可选，要选中的 clue
  */
 function switchToClueTab(clueToSelect = null) {
+    if (isClueInteractionBlocked()) return;
     // 更新游戏状态
     gameState.setTab('clue');
 

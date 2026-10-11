@@ -408,3 +408,36 @@ test('active decay blocks card BGM until final memory phase restores normal swit
     assert.deepEqual(Array.from(h.run('musicCalls')), ['Dream']);
     assert.equal(h.run('gameState.getCurrentBGM()'), 'Dream');
 });
+
+for (const phase of ['deletion2', 'decay', 'active-effect']) {
+    test(phase + ': existing memory clues cannot change tab or input during corruption', () => {
+        const h = boot();
+        h.run(`
+            memoryDecay = {isActive: false};
+            var clueInput = {value: 'unchanged'};
+            document.querySelector = selector => selector === '.input-area .command-input' ? clueInput : null;
+            gameState.setTab('memory');
+            var span = renderer.createTextElement({style: 'clue', text: '凉', clue: '凉水'});
+            var stopped = 0;
+        `);
+        if (phase === 'active-effect') h.run('memoryDecay = {isActive: true}');
+        else h.run(`gameState.advanceStoryPhase('${phase}'); memoryDecay = {isActive: false}`);
+        h.run(`
+            span.onclick({stopPropagation(){stopped++;}});
+            switchToClueTab('凉水');
+            fillClueToInput('凉水');
+        `);
+        assert.equal(h.run('stopped'), 1);
+        assert.equal(h.run('gameState.getState().current_tab'), 'memory');
+        assert.equal(h.run('clueInput.value'), 'unchanged');
+        h.run(`
+            gameState.advanceStoryPhase('final_memory'); memoryDecay.isActive = false;
+            var selected, filled;
+            window.switchToClueTab = value => selected = value;
+            window.fillClueToInput = value => filled = value;
+            span.onclick({stopPropagation(){}});
+        `);
+        assert.equal(h.run('selected'), '凉水');
+        assert.equal(h.run('filled'), '凉水');
+    });
+}
