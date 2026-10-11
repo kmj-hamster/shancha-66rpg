@@ -6,12 +6,13 @@ const vm = require('node:vm');
 
 function harness(saved) {
     const storage = new Map();
+    const timers = [];
     if (saved) storage.set('gameState', JSON.stringify(saved));
     const context = vm.createContext({
         console: { log() {}, warn() {}, error() {} },
         window: {},
         document: { addEventListener() {}, querySelector() { return null; }, querySelectorAll() { return []; } },
-        setTimeout() {},
+        setTimeout(fn, ms) { timers.push({ fn, ms }); },
         localStorage: {
             getItem: key => storage.get(key) ?? null,
             setItem: (key, value) => storage.set(key, value),
@@ -23,6 +24,7 @@ function harness(saved) {
     }
     vm.runInContext('CARDS_DATA = window.CARDS_DATA; gameState = new GameState(); cardManager = new CardManager(); cardManager.loadCards(); unlockManager = new UnlockManager(cardManager, gameState)', context);
     return {
+        timers,
         run: code => vm.runInContext(code, context),
         saved: () => JSON.parse(storage.get('gameState'))
     };
@@ -86,19 +88,21 @@ test('stage two never regresses when first instruction is read later', () => {
 });
 
 for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2', '珂赛特']]) {
-    test(stage + ': full-screen cancel preserves mode and exact input; yes advances once', () => {
+    test(stage + ': cancel restores input; confirm and animation mode change never focus it', () => {
         const h = harness({delete_stage: stage, unlocked_commands: stage === 'stage1' ? ['/delete index'] : ['/delete index', '/delete word']});
         h.run(`
             gameState.loadState(); currentMode = 'delete'; currentLang = 'zh';
-            var input = {value: '  ${answer}  ', focus() {}};
+            var inputFocuses = 0, inputBlurs = 0;
+            var input = {value: '  ${answer}  ', focus() {inputFocuses++;}, blur() {inputBlurs++;}};
             var screen = {appendChild(item){this.child = item;}};
             document.querySelector = selector => selector === '.command-input' ? input : selector === '.crt-screen' ? screen : null;
             document.createElement = () => ({children: [], setAttribute(){}, focus(){}, remove(){this.removed = true;}, append(...items){this.children.push(...items);}, appendChild(item){this.children.push(item);}});
             document.body = {appendChild(){}};
             updateDeleteModePrompt = () => {};
+            switchMode = mode => { currentMode = mode; };
             var animations = 0;
-            playDeletionAnimation1 = () => animations++;
-            playDeletionAnimation2 = () => animations++;
+            DeletionAnimation1 = class { run() { animations++; } };
+            DeletionAnimation2 = class { run() { animations++; } };
             handleDeleteMode();
         `);
         assert.equal(h.run('screen.child === deleteConfirmationModal'), true);
@@ -113,10 +117,22 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2'
         assert.equal(h.run('confirmationLocked'), false);
         assert.equal(h.run('currentMode'), 'delete');
         assert.equal(h.run('input.value'), '  ' + answer + '  ');
+        assert.equal(h.run('inputFocuses'), 1, 'cancel returns focus for editing');
         h.run('handleDeleteMode(); var yes = deleteConfirmationModal.children[0].children[2].children[0]; yes.onclick(); yes.onclick()');
         assert.equal(h.run('deleteConfirmationModal'), null);
         assert.equal(h.run('input.value'), '');
         assert.equal(h.run('animations'), 1);
         assert.equal(h.run('gameState.getPendingConfirmation()'), null);
+        assert.equal(h.run('inputFocuses'), 1, 'confirm must not reopen the keyboard');
+        assert.equal(h.run('inputBlurs'), 1);
+        assert.equal(h.run('inputLocked'), true);
+        const modeTimers = h.timers.filter(timer => timer.ms === 2000);
+        assert.equal(modeTimers.length, 1);
+        modeTimers[0].fn();
+        assert.equal(h.run('currentMode'), 'search');
+        assert.equal(h.run('inputLocked'), false);
+        assert.equal(h.run('inputFocuses'), 1, 'automatic mode change must not reopen the keyboard');
+        h.run('switchToSearchMode()');
+        assert.equal(h.run('inputFocuses'), 2, 'normal search mode still focuses the input');
     });
 }

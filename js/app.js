@@ -782,7 +782,7 @@ function clearConfirmationLock() {
 /**
  * 切换回 SEARCH 模式
  */
-function switchToSearchMode(preserveOutput = false) {
+function switchToSearchMode(preserveOutput = false, focusInput = true) {
     // ECG联动：返回SEARCH模式时恢复正常（瞬间变色，重置速度和幅度）
     if (window.ecgController) {
         window.ecgController.setMode('normal');
@@ -791,7 +791,7 @@ function switchToSearchMode(preserveOutput = false) {
     }
 
     switchMode('search', preserveOutput);
-    document.querySelector('.command-input')?.focus();
+    if (focusInput) document.querySelector('.command-input')?.focus();
 }
 
 /**
@@ -2554,9 +2554,14 @@ function showDeleteConfirmationModal() {
             input.value = confirmed ? '' : originalInput;
             if (window.updateCursorPosition) window.updateCursorPosition();
         }
-        if (confirmed) handleYesConfirmation(pending);
-        else updateDeleteModePrompt();
-        if (input) input.focus();
+        if (confirmed) {
+            // 进入演出后保持输入框失焦，避免手机在点击确认时唤起键盘。
+            if (input) input.blur();
+            handleYesConfirmation(pending);
+        } else {
+            updateDeleteModePrompt();
+            if (input) input.focus();
+        }
     };
     yes.onclick = () => close(true);
     no.onclick = () => close(false);
@@ -2698,7 +2703,7 @@ function playDeletionAnimation1() {
     setTimeout(() => {
         inputLocked = false;
         if (currentMode === 'delete') {
-            switchToSearchMode();
+            switchToSearchMode(false, false);
         }
     }, 2000);
 
@@ -2764,7 +2769,7 @@ function playDeletionAnimation2() {
     setTimeout(() => {
         inputLocked = false;
         if (currentMode === 'delete') {
-            switchToSearchMode();
+            switchToSearchMode(false, false);
         }
     }, 2000);
 
