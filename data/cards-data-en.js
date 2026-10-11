@@ -2069,8 +2069,8 @@ window.CARDS_DATA = {
         "question": "What cognitive disorder does Gregor suffer from?",
         "answer": ["ad", "alzheimer’s disease", "alzheimer", "alzheimer's disease","alzheimer's","alzheimer’s",'alzheimers'],
         "preview_lines": 8,
-        "hint_cards": ["file_007","file_008","file_009"],
-        "hint": "Correlated signal detected in Son's Diary"
+        "hint_cards": ["file_006"],
+        "hint": "Correlated signal detected in Cognitive Decline"
       },
       "content": [
         {
@@ -2132,7 +2132,7 @@ window.CARDS_DATA = {
     },
     {
       "id": "file_006",
-      "title": "About Alzheimer's disease",
+      "title": "Cognitive Decline",
       "type": "file",
       "year": null,
       "time": null,

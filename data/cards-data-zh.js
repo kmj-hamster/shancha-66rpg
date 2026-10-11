@@ -2156,8 +2156,8 @@ window.CARDS_DATA = {
           "老年痴呆症"
         ],
         "preview_lines": 8,
-        "hint_cards": ["file_007","file_008","file_009"],
-        "hint": "监测到Son's Diary出现关联信号"
+        "hint_cards": ["file_006"],
+        "hint": "监测到认知退行出现关联信号"
       },
       "content": [
         {
@@ -2211,7 +2211,7 @@ window.CARDS_DATA = {
     },
     {
       "id": "file_006",
-      "title": "关于阿尔茨海默症",
+      "title": "认知退行",
       "type": "file",
       "year": null,
       "time": null,

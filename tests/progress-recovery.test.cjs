@@ -303,7 +303,7 @@ for (const lang of ['zh', 'en']) {
 
     test(lang + ': wrong answers replace highlights with hint targets; correct answers clear them', () => {
         const h = boot({discovered_cards: ['mem_007','mem_012','file_005','file_018']}, lang);
-        for (const [id, targets] of Object.entries({mem_007:['mem_013'], mem_012:['mem_011'], file_005:['file_007','file_008','file_009'], file_018:['mem_005','mem_010','mem_021']})) {
+        for (const [id, targets] of Object.entries({mem_007:['mem_013'], mem_012:['mem_011'], file_005:['file_006'], file_018:['mem_005','mem_010','mem_021']})) {
             h.run('unlockManager.verifyAnswer(' + JSON.stringify(id) + ', "wrong")');
             assert.deepEqual(Array.from(h.run('gameState.highlightedCards')), targets);
         }
