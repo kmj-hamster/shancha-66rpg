@@ -3333,7 +3333,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "质的掇色变的红钴。然逅口末，挡成住勒是我爇的，温、粘物。世眼界腻的鳍",
+          "text": "质的掇色变的红钴。然逅口末，挡成住勒是我髓的，温、粘物。世眼界腻的鳍",
           "style": "default",
           "breakAfter": true
         },
