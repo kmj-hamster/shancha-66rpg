@@ -1042,10 +1042,10 @@ body.reading-mode .system-output {
   color: #0a0a0a;
 }
 
-/* 仅轻微改变文字辉光，不改变颜色或已读标题的不透明度。 */
+/* 双层文字辉光增强呼吸明暗差，不改变颜色或已读标题的不透明度。 */
 @keyframes title-highlight-breathe {
-  0%, 100% { text-shadow: 0 0 3px currentColor; }
-  50% { text-shadow: 0 0 7px currentColor; }
+  0%, 100% { text-shadow: 0 0 2px currentColor, 0 0 0 transparent; }
+  50% { text-shadow: 0 0 6px currentColor, 0 0 12px currentColor; }
 }
 
 @media (prefers-reduced-motion: reduce) {
