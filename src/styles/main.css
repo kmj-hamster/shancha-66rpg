@@ -1021,8 +1021,6 @@ body.reading-mode .system-output {
 
 /* 导航高亮仅强调文件名，沿用当前状态的文字颜色。 */
 .file-item.title-highlight .file-name {
-  outline: 1px solid currentColor;
-  outline-offset: 2px;
   text-shadow: 0 0 5px currentColor;
   font-weight: bold;
 }
