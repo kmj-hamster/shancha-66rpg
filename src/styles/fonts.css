@@ -2,13 +2,13 @@
    Burning Memory - Font Definitions
    ====================================
    Fira Code Monospace Font Family
-   Zpix Pixel Font (Chinese)
+   Fusion Pixel Pixel Font (Chinese)
 */
 
-/* Zpix - 最像素中文字体 */
+/* Fusion Pixel - 缝合像素 12px 简体比例版（基础点阵规格，显示字号由界面决定） */
 @font-face {
-  font-family: 'Zpix';
-  src: url('../assets/fonts/zpix.woff2') format('woff2');
+  font-family: 'Fusion Pixel';
+  src: url('../assets/fonts/fusion-pixel-12px-proportional-zh_hans.woff2') format('woff2');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

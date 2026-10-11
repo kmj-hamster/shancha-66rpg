@@ -1,0 +1,6 @@
+Fusion Pixel Font / 缝合像素字体
+Version: 2026.09.25
+Variant: 12px proportional, zh-Hans
+Source: https://github.com/TakWolf/fusion-pixel-font/releases/tag/2026.09.25
+Asset: fusion-pixel-font-12px-proportional-ttf.woff2-v2026.09.25.zip
+Font is unmodified; OFL.txt and upstream LICENSES are included.

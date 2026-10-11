@@ -102,8 +102,8 @@ body {
   touch-action: none;
   background-color: var(--bg-black);
   color: var(--terminal-green);
-  font-family: 'VT323', 'Zpix', monospace;
-  font-size: 20px;  /* Zpix像素字体 */
+  font-family: 'VT323', 'Fusion Pixel', monospace;
+  font-size: 20px;  /* Fusion Pixel像素字体 */
   line-height: 1.5;
   display: flex;
   justify-content: center;
@@ -239,7 +239,7 @@ body {
 /* 文本内容区 - Text Content Area */
 .text-content {
   color: var(--phosphor-primary);
-  font-size: 20px;  /* 中文Zpix像素字体 */
+  font-size: 20px;  /* 中文Fusion Pixel像素字体 */
   line-height: 1.5;
   max-width: 80ch;
   /* 禁用文字选择 - Disable Text Selection */
@@ -397,7 +397,7 @@ body.reading-mode .system-output.awakening-progress-mode {
   border: none;
   outline: none;
   color: var(--phosphor-primary, #8aff8a);
-  font-family: 'VT323', 'Zpix', monospace;
+  font-family: 'VT323', 'Fusion Pixel', monospace;
   font-size: 22px;
   line-height: 1.5;
   padding-left: 4px; /* 中文字符左侧呼吸空间 */
@@ -709,7 +709,7 @@ body.theme-delete .statistics {
   background: transparent;
   border: none;
   color: var(--phosphor-primary, #8aff8a);
-  font-family: 'VT323', 'Zpix', monospace;
+  font-family: 'VT323', 'Fusion Pixel', monospace;
   font-size: 18px;
   cursor: pointer;
   transition: opacity 0.2s, color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
@@ -915,7 +915,7 @@ body.reading-mode .system-output {
 
 .reset-warning {
   color: var(--phosphor-primary, #00ff41);
-  font-family: 'VT323', 'Zpix', monospace;
+  font-family: 'VT323', 'Fusion Pixel', monospace;
   font-size: 18px;
   line-height: 1.6;
   margin: 0;
@@ -931,7 +931,7 @@ body.reading-mode .system-output {
 
 /* 按钮样式 */
 .reset-btn {
-  font-family: 'VT323', 'Zpix', monospace;
+  font-family: 'VT323', 'Fusion Pixel', monospace;
   font-size: 16px;
   padding: 8px 20px;
   cursor: pointer;
@@ -1066,7 +1066,7 @@ body.reading-mode .system-output {
 }
 .delete-confirm-title {
   margin: 0 0 32px;
-  font-family: 'Zpix', 'Fira Code', monospace;
+  font-family: 'Fusion Pixel', 'Fira Code', monospace;
   font-size: clamp(40px, 8vw, 104px);
   font-weight: 500;
   line-height: 1.4;

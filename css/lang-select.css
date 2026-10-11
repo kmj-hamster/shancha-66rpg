@@ -42,7 +42,7 @@
   text-shadow:
     0 0 5px #00FF00,
     0 0 10px #00FF00;
-  font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+  font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
 }
 
 .lang-title-sub {
@@ -54,7 +54,7 @@
   text-shadow:
     0 0 5px #00FF00,
     0 0 10px #00FF00;
-  font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+  font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
 }
 
 /* ========== 语言按钮 ========== */
@@ -64,7 +64,7 @@
   padding: 18px 40px;
   margin-bottom: 20px;
   font-size: 22px;
-  font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+  font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
   color: #00FF00;
   background: transparent;
   border: 2px solid #00FF00;
@@ -324,7 +324,7 @@
     0 0 10px #00FF00,
     0 0 20px #00FF00,
     0 0 30px #00FF00;
-  font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+  font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
   animation: warning-pulse 2.5s ease-in-out infinite;
 }
 
@@ -353,7 +353,7 @@
   font-weight: 400;
   text-shadow:
     0 0 5px #00FF00;
-  font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+  font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
   opacity: 0.9;
 }
 
@@ -412,7 +412,7 @@
   text-shadow:
     0 0 5px #00FF00,
     0 0 10px #00FF00;
-  font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+  font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
 }
 
 /* ========== 警告/耳机界面 CRT 扫描线效果 ========== */

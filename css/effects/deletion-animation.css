@@ -26,7 +26,7 @@
   height: calc(var(--vh, 1vh) * 100);
   background: #000000;
   color: #FF0000;
-  font-family: 'Zpix', 'Fira Code', 'Courier New', 'Consolas', monospace;
+  font-family: 'Fusion Pixel', 'Fira Code', 'Courier New', 'Consolas', monospace;
   z-index: 10000;
   display: flex;
   flex-direction: column;

@@ -15,7 +15,7 @@ body {
   height: calc(var(--vh, 1vh) * 100);
   background: #000000;
   overflow: hidden;
-  font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+  font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
 }
 
 /* ========== 开场界面容器 ========== */
@@ -99,7 +99,7 @@ body {
 
 /* 中文版大号"山茶"样式 */
 .ascii-art.ascii-art-zh {
-  font-family: 'Zpix', 'Microsoft YaHei', sans-serif;
+  font-family: 'Fusion Pixel', 'Microsoft YaHei', sans-serif;
   font-size: 120px;
   line-height: 1.2;
   letter-spacing: 0.3em;
@@ -115,7 +115,7 @@ body {
   height: 60px;
   padding: 0;
   font-size: 20px;
-  font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+  font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
   color: rgb(var(--opening-button-rgb, 0, 255, 0));
   background: transparent;
   border: 2px solid rgb(var(--opening-button-rgb, 0, 255, 0));

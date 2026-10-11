@@ -24,7 +24,7 @@ body {
     display: flex !important;
     justify-content: center !important;
     align-items: center !important;
-    font-family: 'VT323', 'Zpix', monospace !important;
+    font-family: 'VT323', 'Fusion Pixel', monospace !important;
     box-sizing: border-box !important;
 }
 
@@ -466,7 +466,7 @@ body.lang-en .ecg-label-en {
     justify-content: center;
     align-items: center;
     color: var(--phosphor-primary, #48a04e);
-    font-family: 'VT323', 'Zpix', monospace;
+    font-family: 'VT323', 'Fusion Pixel', monospace;
     font-size: 24px;
     text-align: center;
     padding: 20px;
@@ -606,7 +606,7 @@ body.lang-en .pwa-guide .pwa-title-zh {
     justify-content: center;
     align-items: center;
     color: var(--phosphor-primary, #48a04e);
-    font-family: 'VT323', 'Zpix', monospace;
+    font-family: 'VT323', 'Fusion Pixel', monospace;
     text-align: center;
     padding: 30px;
     box-sizing: border-box;

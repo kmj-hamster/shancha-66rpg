@@ -64,7 +64,7 @@
 
 /* ASCII艺术字 */
 .ending-ascii-art {
-  font-family: 'Courier New', 'Zpix', monospace;
+  font-family: 'Courier New', 'Fusion Pixel', monospace;
   font-size: 14px;
   line-height: 1.1;
   color: #00FF00;
@@ -101,7 +101,7 @@
 
 /* 中文版大号"山茶"样式 */
 .ending-ascii-art.ending-ascii-art-zh {
-  font-family: 'Zpix', 'Microsoft YaHei', sans-serif;
+  font-family: 'Fusion Pixel', 'Microsoft YaHei', sans-serif;
   font-size: 120px;
   line-height: 1.2;
   letter-spacing: 0.3em;
@@ -119,12 +119,12 @@
   font-weight: 300;
   text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-  font-family: 'Courier New', 'Zpix', monospace;
+  font-family: 'Courier New', 'Fusion Pixel', monospace;
 }
 
 /* 中文版感谢文本样式 */
 .ending-thanks-zh {
-  font-family: 'Zpix', 'Microsoft YaHei', sans-serif;
+  font-family: 'Fusion Pixel', 'Microsoft YaHei', sans-serif;
   font-size: 24px;
   letter-spacing: 0.2em;
   text-transform: none;
@@ -136,7 +136,7 @@
 .ending-reset-btn {
   margin-top: 60px;
   padding: 12px 40px;
-  font-family: 'Courier New', 'Zpix', monospace;
+  font-family: 'Courier New', 'Fusion Pixel', monospace;
   font-size: 18px;
   color: #00FF00;
   background: transparent;
@@ -304,7 +304,7 @@
   .ending-subtitle,
   .ending-thanks,
   .ending-reset-btn {
-    font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+    font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
     font-weight: 300;
     color: #CCCCCC;
     text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
@@ -338,7 +338,7 @@
   }
 
   .ending-thanks {
-    font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+    font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
     font-size: 3.5vh;
     letter-spacing: 3px;
     margin-top: 0;
@@ -353,7 +353,7 @@
   }
 
   .ending-reset-btn {
-    font-family: 'Fira Code', 'Zpix', 'Courier New', monospace;
+    font-family: 'Fira Code', 'Fusion Pixel', 'Courier New', monospace;
     margin-top: 0;
     padding: 1.5vh 5vw;
     font-size: 2.8vh;
