@@ -716,7 +716,7 @@ function setActiveFuncBtn(mode) {
  * 切换交互模式
  * @param {string} mode - 'search' | 'sort' | 'delete'
  */
-function switchMode(mode) {
+function switchMode(mode, preserveOutput = false) {
     currentMode = mode;
 
     // 1. 切换主题类
@@ -727,10 +727,9 @@ function switchMode(mode) {
     setActiveFuncBtn(mode);
 
     // 3. 更新 system-output 提示
-    if (mode === 'delete') {
-        updateDeleteModePrompt();
-    } else {
-        updateModePrompt(mode);
+    if (!preserveOutput) {
+        if (mode === 'delete') updateDeleteModePrompt();
+        else updateModePrompt(mode);
     }
 
     console.log(`[Mode] Switched to ${mode} mode`);
@@ -866,7 +865,7 @@ function clearConfirmPrompt() {
 /**
  * 切换回 SEARCH 模式
  */
-function switchToSearchMode() {
+function switchToSearchMode(preserveOutput = false) {
     // ECG联动：返回SEARCH模式时恢复正常（瞬间变色，重置速度和幅度）
     if (window.ecgController) {
         window.ecgController.setMode('normal');
@@ -874,7 +873,7 @@ function switchToSearchMode() {
         window.ecgController.setAmplitude(0.8);
     }
 
-    switchMode('search');
+    switchMode('search', preserveOutput);
     document.querySelector('.command-input')?.focus();
 }
 
@@ -1196,7 +1195,8 @@ function executeSortAndReturn(sortType) {
     // 2 秒后返回 SEARCH 模式
     setTimeout(() => {
         inputLocked = false;
-        switchToSearchMode();
+        // 年份统计保留在输出队列，由后续消息自然挤走。
+        switchToSearchMode(sortType === 'year');
     }, 2000);
 }
 

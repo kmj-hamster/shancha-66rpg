@@ -333,3 +333,28 @@ test('default sort restores ID order after time/year sorting and survives reload
     h.run('gameState.setSort("time"); processSortModeInput("default")');
     assert.equal(h.save().current_sort, 'default');
 });
+
+test('year summary survives automatic return to search and rolls out with later output', () => {
+    const h = boot({unlocked_commands: ['/sort year']});
+    h.run(`
+        var outputLines = [{textContent:'',style:{}},{textContent:'',style:{}}];
+        document.querySelector = selector => selector === '.system-output' ? {querySelectorAll:()=>outputLines} : null;
+        refreshFileList = () => {};
+        isMobileLandscape = () => false;
+        currentMode = 'sort';
+        processSortModeInput('year');
+    `);
+    const before = h.run('JSON.stringify(systemOutputLines)');
+    h.timers.find(timer => timer.ms === 2000).fn();
+    assert.equal(h.run('currentMode'), 'search');
+    assert.equal(h.run('inputLocked'), false);
+    assert.equal(h.run('JSON.stringify(systemOutputLines)'), before);
+    assert.match(h.run('outputLines[1].textContent'), /1945.*1995/);
+    // boot replaces UI feedback with a stub; invoke the production implementation here.
+    const source = fs.readFileSync(path.join(__dirname, '../js/app.js'), 'utf8');
+    h.run(source.slice(source.indexOf('function showFeedback(message'), source.indexOf('\n/**', source.indexOf('function showFeedback(message'))));
+    h.run('showFeedback("next command")');
+    assert.match(h.run('outputLines[0].textContent'), /1945.*1995/);
+    h.run('showFeedback("another command")');
+    assert.equal(h.run('outputLines.some(line => line.textContent.includes("1945"))'), false);
+});
