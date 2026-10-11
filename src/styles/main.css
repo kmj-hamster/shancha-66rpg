@@ -1074,7 +1074,7 @@ body.reading-mode .system-output {
   text-shadow: 0 0 18px rgba(204, 68, 68, .35);
   overflow-wrap: anywhere;
 }
-.delete-confirm-admin {
+.delete-confirm-target {
   margin: 0 0 56px;
   font-size: clamp(18px, 2.5vw, 28px);
   letter-spacing: .08em;
@@ -1102,5 +1102,5 @@ body.reading-mode .system-output {
 }
 @media (max-height: 500px) {
   .delete-confirm-title { font-size: clamp(36px, 9vh, 60px); margin-bottom: 16px; }
-  .delete-confirm-admin { margin-bottom: 24px; }
+  .delete-confirm-target { margin-bottom: 24px; }
 }

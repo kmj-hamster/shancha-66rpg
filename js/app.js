@@ -2825,11 +2825,11 @@ function showDeleteConfirmationModal() {
     const target = pending.type === 'delete1'
         ? (zh ? '记忆18' : 'Memory 18')
         : (isCarol ? (zh ? '珂赛特' : 'Carol') : (zh ? '山茶' : 'Camellia'));
-    title.textContent = (zh ? '删除 ' : 'Delete ') + target;
+    title.textContent = zh ? '删除' : 'Delete';
     const message = document.createElement('p');
     message.id = 'delete-confirm-message';
-    message.className = 'delete-confirm-admin';
-    message.textContent = zh ? '管理员：珂赛特' : 'Administrator: Carol';
+    message.className = 'delete-confirm-target';
+    message.textContent = target;
     const actions = document.createElement('div');
     actions.className = 'delete-confirm-actions';
     const yes = document.createElement('button');

@@ -105,8 +105,8 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2'
         assert.equal(h.run('screen.child === deleteConfirmationModal'), true);
         assert.match(h.run('deleteConfirmationModal.className'), /opening-screen/);
         assert.match(h.run('deleteConfirmationModal.children[0].children[2].children[0].className'), /opening-btn/);
-        assert.equal(h.run('deleteConfirmationModal.children[0].children[0].textContent'), stage === 'stage1' ? '删除 记忆18' : '删除 ' + answer);
-        assert.equal(h.run('deleteConfirmationModal.children[0].children[1].textContent'), '管理员：珂赛特');
+        assert.equal(h.run('deleteConfirmationModal.children[0].children[0].textContent'), '删除');
+        assert.equal(h.run('deleteConfirmationModal.children[0].children[1].textContent'), stage === 'stage1' ? '记忆18' : answer);
         h.run('processCommand("y"); handleDeleteCommand("yes")');
         assert.equal(h.run('animations + namePrompts'), 0);
         h.run('deleteConfirmationModal.children[0].children[2].children[1].onclick()');
