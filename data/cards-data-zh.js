@@ -2136,7 +2136,7 @@ window.CARDS_DATA = {
       "year": null,
       "time": null,
       "unlock_by": [
-        "mem_024"
+        "file_009"
       ],
       "new_clues": [],
       "unlock_type": "question",

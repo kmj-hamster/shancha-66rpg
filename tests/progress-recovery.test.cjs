@@ -358,3 +358,25 @@ test('year summary survives automatic return to search and rolls out with later 
     h.run('showFeedback("another command")');
     assert.equal(h.run('outputLines.some(line => line.textContent.includes("1945"))'), false);
 });
+
+for (const lang of ['zh', 'en']) {
+    test(lang + ': Carol file appears only after the three diary entries are completed', () => {
+        const h = boot({discovered_cards:['mem_024'], unlocked_cards:['mem_024']}, lang);
+        const read = id => h.run('gameState.completeCardReading(' + JSON.stringify(id) + ', cardManager.getAllCards(), COMMAND_UNLOCK_MAP); syncStateToCardManager()');
+        read('mem_024');
+        assert.ok(h.save().unlocked_cards.includes('file_007'));
+        assert.equal(h.save().discovered_cards.includes('file_005'), false);
+        read('file_007');
+        assert.ok(h.save().unlocked_cards.includes('file_008'));
+        assert.equal(h.save().discovered_cards.includes('file_005'), false);
+        read('file_008');
+        assert.ok(h.save().unlocked_cards.includes('file_009'));
+        assert.equal(h.save().discovered_cards.includes('file_005'), false);
+        const interrupted = boot(h.save(), lang);
+        interrupted.open('file_009');
+        assert.equal(interrupted.save().discovered_cards.includes('file_005'), false);
+        read('file_009');
+        assert.ok(h.save().discovered_cards.includes('file_005'));
+        assert.equal(h.save().unlocked_cards.includes('file_005'), false, 'still requires the question answer');
+    });
+}
