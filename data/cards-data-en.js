@@ -3005,7 +3005,7 @@ window.CARDS_DATA = {
         }
 ,
         {
-          "text": "What I am about to do—how is it different from Project Iron?",
+          "text": "What I am about to do—how is it any different from Project Iron?",
           "style": "default",
           "breakAfter": true
         }

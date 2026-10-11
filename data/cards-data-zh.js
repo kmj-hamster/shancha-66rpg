@@ -2976,7 +2976,7 @@ window.CARDS_DATA = {
           "style": "default"
         },
         {
-          "text": "我即将要做的事——和铁人计划有什么区别？",
+          "text": "我即将做的事，和铁人计划又有什么区别？",
           "style": "default",
           "breakAfter": true
         }
