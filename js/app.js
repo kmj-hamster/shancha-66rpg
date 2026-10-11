@@ -226,7 +226,7 @@ function initLocalization() {
         pleaseEnterName: currentLang === 'zh' ? '请输入你的名字' : 'Please enter your name',
 
         // Search 模式提示
-        pressEnterToSearch: currentLang === 'zh' ? '输入回车键执行搜索' : 'Press Enter to search',
+        pressEnterToSearch: currentLang === 'zh' ? '点击按钮进行搜索' : 'Click the button to search',
         tapButtonToSearch: currentLang === 'zh' ? '点击下方按键进行[搜索]' : 'Tap [SEARCH] button below',
 
         // Scramble 相关
