@@ -2132,7 +2132,7 @@ window.CARDS_DATA = {
     },
     {
       "id": "file_006",
-      "title": "Cognitive Decline",
+      "title": "#Cognitive Decline",
       "type": "file",
       "year": null,
       "time": null,
