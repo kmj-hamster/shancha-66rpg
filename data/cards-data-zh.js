@@ -2778,22 +2778,17 @@ window.CARDS_DATA = {
           "style": "default"
         },
         {
-          "text": "你可能已经发现了。",
+          "text": "点击[排序]按钮，输入指令，再次点击[排序]执行。",
           "style": "default",
           "breakAfter": true
         },
         {
-          "text": "这些记忆来自于同一个日期。",
+          "text": "如果想按照时间排序，输入 TIME。",
           "style": "default",
           "breakAfter": true
         },
         {
-          "text": "如果你希望按照时间排序，请点击[排序]按钮，然后输入 time",
-          "style": "default",
-          "breakAfter": true
-        },
-        {
-          "text": "如果你希望恢复默认排序（按ID排序），请点击[排序]按钮，输入 default，然后点击[排序]执行。",
+          "text": "如果想按照 ID 排序（默认），输入 DEFAULT。",
           "style": "default",
           "breakAfter": true
         }

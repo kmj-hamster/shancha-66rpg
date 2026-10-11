@@ -2751,28 +2751,19 @@ window.CARDS_DATA = {
         {
           "text": "",
           "style": "default"
-        }
-,
+        },
         {
-          "text": "You may have already noticed:",
+          "text": "Click [SORT], enter a command, then click [SORT] again to execute.",
           "style": "default",
           "breakAfter": true
-        }
-,
+        },
         {
-          "text": "these memories are from the same date.",
+          "text": "To sort by time, enter TIME.",
           "style": "default",
           "breakAfter": true
-        }
-,
+        },
         {
-          "text": "If you wish to sort by time, click the [SORT] button, then type time.",
-          "style": "default",
-          "breakAfter": true
-        }
-,
-        {
-          "text": "To restore the default order (by ID), click [SORT], enter default, then click [SORT] to execute.",
+          "text": "To sort by ID (the default order), enter DEFAULT.",
           "style": "default",
           "breakAfter": true
         }
