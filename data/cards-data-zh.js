@@ -926,7 +926,12 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "我端起茶杯，又喝了一口。茶已经",
+          "text": "我端起茶杯，又喝了一口。",
+          "style": "default",
+          "breakAfter": true
+        },
+        {
+          "text": "茶已经",
           "style": "default"
         },
         {
