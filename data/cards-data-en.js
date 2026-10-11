@@ -2772,7 +2772,7 @@ window.CARDS_DATA = {
         }
 ,
         {
-          "text": "To restore the default sort, click the [SEARCH] button to return to search mode.",
+          "text": "To restore the default order (by ID), click [SORT], enter default, then click [SORT] to execute.",
           "style": "default",
           "breakAfter": true
         }

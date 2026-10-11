@@ -1128,7 +1128,9 @@ function handleCommandInput(event) {
 function processSortModeInput(input) {
     const cmd = input.toLowerCase().trim();
 
-    if (cmd === 'time') {
+    if (cmd === 'default') {
+        executeSortAndReturn('default');
+    } else if (cmd === 'time') {
         executeSortAndReturn('time');
     } else if (cmd === 'year') {
         if (gameState.isCommandUnlocked('/sort year')) {
@@ -1143,7 +1145,7 @@ function processSortModeInput(input) {
 
 /**
  * 执行排序并在 2 秒后返回 SEARCH 模式
- * @param {string} sortType - 'time' | 'year'
+ * @param {string} sortType - 'default' | 'time' | 'year'
  */
 function executeSortAndReturn(sortType) {
     // 复用 handleSort 的核心逻辑

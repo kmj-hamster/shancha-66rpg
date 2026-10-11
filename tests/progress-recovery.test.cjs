@@ -319,3 +319,17 @@ for (const lang of ['zh', 'en']) {
         assert.equal(h.save().read_cards.includes('file_018'), false);
     });
 }
+
+test('default sort restores ID order after time/year sorting and survives reload', () => {
+    const h = boot({current_sort: 'year', show_year: true, sort_year_used: true});
+    h.run('refreshFileList = () => {}; processSortModeInput("  DeFaUlT  ")');
+    assert.equal(h.save().current_sort, 'default');
+    assert.equal(h.save().show_year, false);
+    assert.equal(h.save().sort_year_used, true);
+    assert.deepEqual(Array.from(h.run('sortCards([cardManager.getCardById("mem_010"), cardManager.getCardById("mem_003"), cardManager.getCardById("mem_001")], gameState.getState().current_sort).map(c => c.id)')), ['mem_001', 'mem_003', 'mem_010']);
+    const restored = boot(h.save());
+    assert.equal(restored.save().current_sort, 'default');
+    assert.equal(restored.save().show_year, false);
+    h.run('gameState.setSort("time"); processSortModeInput("default")');
+    assert.equal(h.save().current_sort, 'default');
+});

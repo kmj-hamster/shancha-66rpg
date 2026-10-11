@@ -2793,7 +2793,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "如果你希望恢复默认排序，请点击[搜索]按钮返回搜索模式",
+          "text": "如果你希望恢复默认排序（按ID排序），请点击[排序]按钮，输入 default，然后点击[排序]执行。",
           "style": "default",
           "breakAfter": true
         }
