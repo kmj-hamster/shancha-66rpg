@@ -226,8 +226,8 @@ function initLocalization() {
         pleaseEnterName: currentLang === 'zh' ? '请输入你的名字' : 'Please enter your name',
 
         // Search 模式提示
-        pressEnterToSearch: currentLang === 'zh' ? '点击按钮进行搜索' : 'Click the button to search',
-        tapButtonToSearch: currentLang === 'zh' ? '点击下方按键进行[搜索]' : 'Tap [SEARCH] button below',
+        pressEnterToSearch: currentLang === 'zh' ? '点击[线索]中的词语，然后点击[搜索]' : 'Click a word in [CLUE], then click [SEARCH]',
+        tapButtonToSearch: currentLang === 'zh' ? '点击[线索]中的词语，然后点击[搜索]' : 'Tap a word in [CLUE], then tap [SEARCH]',
 
         // Scramble 相关
         scrambleNotInit: currentLang === 'zh' ? '乱码特效未初始化' : 'Scramble effect not initialized',
