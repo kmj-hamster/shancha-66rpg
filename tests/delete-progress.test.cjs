@@ -91,7 +91,8 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2'
         h.run(`
             gameState.loadState(); currentMode = 'delete'; currentLang = 'zh';
             var input = {value: '  ${answer}  ', focus() {}};
-            document.querySelector = selector => selector === '.command-input' ? input : null;
+            var screen = {appendChild(item){this.child = item;}};
+            document.querySelector = selector => selector === '.command-input' ? input : selector === '.crt-screen' ? screen : null;
             document.createElement = () => ({children: [], setAttribute(){}, focus(){}, remove(){this.removed = true;}, append(...items){this.children.push(...items);}, appendChild(item){this.children.push(item);}});
             document.body = {appendChild(){}};
             updateDeleteModePrompt = () => {};
@@ -101,6 +102,9 @@ for (const [stage, answer] of [['stage1', '18'], ['stage2', '山茶'], ['stage2'
             showConfirmPrompt = type => { if(type === 'enter_name') namePrompts++; };
             handleDeleteMode();
         `);
+        assert.equal(h.run('screen.child === deleteConfirmationModal'), true);
+        assert.match(h.run('deleteConfirmationModal.className'), /opening-screen/);
+        assert.match(h.run('deleteConfirmationModal.children[0].children[2].children[0].className'), /opening-btn/);
         assert.equal(h.run('deleteConfirmationModal.children[0].children[0].textContent'), stage === 'stage1' ? '删除 记忆18' : '删除 ' + answer);
         assert.equal(h.run('deleteConfirmationModal.children[0].children[1].textContent'), '管理员：珂赛特');
         h.run('processCommand("y"); handleDeleteCommand("yes")');

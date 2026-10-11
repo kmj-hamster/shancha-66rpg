@@ -2811,9 +2811,9 @@ function showDeleteConfirmationModal() {
     const originalInput = input ? input.value : '';
     const zh = currentLang === 'zh';
     const overlay = document.createElement('div');
-    overlay.className = 'delete-confirm-screen';
+    overlay.className = 'opening-screen crt-active delete-confirm-screen';
     const modal = document.createElement('div');
-    modal.className = 'delete-confirm-content';
+    modal.className = 'opening-frame delete-confirm-content';
     modal.setAttribute('role', 'dialog');
     modal.setAttribute('aria-modal', 'true');
     modal.setAttribute('aria-labelledby', 'delete-confirm-title');
@@ -2833,10 +2833,10 @@ function showDeleteConfirmationModal() {
     const actions = document.createElement('div');
     actions.className = 'delete-confirm-actions';
     const yes = document.createElement('button');
-    yes.className = 'delete-confirm-button';
+    yes.className = 'opening-btn delete-confirm-button';
     yes.textContent = zh ? '确定' : 'Confirm';
     const no = document.createElement('button');
-    no.className = 'delete-confirm-button';
+    no.className = 'opening-btn delete-confirm-button';
     no.textContent = zh ? '取消' : 'Cancel';
     const close = confirmed => {
         if (deleteConfirmationModal !== overlay) return;
@@ -2864,7 +2864,7 @@ function showDeleteConfirmationModal() {
     actions.append(yes, no);
     modal.append(title, message, actions);
     overlay.appendChild(modal);
-    document.body.appendChild(overlay);
+    document.querySelector('.crt-screen').appendChild(overlay);
     deleteConfirmationModal = overlay;
     confirmationLocked = true;
     yes.focus();

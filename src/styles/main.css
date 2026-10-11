@@ -1042,20 +1042,28 @@ body.reading-mode .system-output {
   .file-item.title-highlight .file-name { animation: none; }
 }
 
-/* 全屏删除确认页：实色背景取代弹窗，沿用删除模式的红色。 */
-.delete-confirm-screen {
-  position: fixed;
-  inset: 0;
-  z-index: 100000;
-  display: grid;
-  place-items: center;
+/* 删除确认复用标题屏幕，保留仪器外壳、心电图与 CRT 特效。 */
+.opening-screen.delete-confirm-screen {
+  --bg-screen: #120505;
+  --opening-button-rgb: 204, 68, 68;
   overflow-y: auto;
   padding: 32px 20px;
-  box-sizing: border-box;
-  background: #050505;
   color: #cc4444;
 }
-.delete-confirm-content { width: min(100%, 960px); text-align: center; }
+.opening-frame.delete-confirm-content {
+  width: min(100%, 960px);
+  height: auto;
+  min-height: 100%;
+  padding: 0;
+  flex-shrink: 0;
+  background: transparent;
+  box-shadow: inset 0 0 60px rgba(204, 68, 68, .05);
+  text-align: center;
+}
+.opening-screen.delete-confirm-screen::before {
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px,
+    rgba(204, 68, 68, .08) 2px, rgba(204, 68, 68, .08) 4px);
+}
 .delete-confirm-title {
   margin: 0 0 32px;
   font-family: 'Zpix', 'Fira Code', monospace;
@@ -1072,23 +1080,25 @@ body.reading-mode .system-output {
   letter-spacing: .08em;
 }
 .delete-confirm-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 24px; }
-.delete-confirm-button {
+.opening-btn.delete-confirm-button {
   width: 220px;
   max-width: 100%;
-  min-height: 60px;
-  padding: 12px 24px;
-  border: 2px solid currentColor;
-  background: transparent;
-  color: inherit;
-  font: inherit;
   font-size: 22px;
   letter-spacing: .15em;
-  cursor: pointer;
-  transition: background-color .2s, box-shadow .2s;
 }
-.delete-confirm-button:hover, .delete-confirm-button:focus-visible {
-  background: rgba(204, 68, 68, .15);
-  box-shadow: 0 0 20px rgba(204, 68, 68, .4), inset 0 0 16px rgba(204, 68, 68, .1);
+/* 使用主题色辉光标记键盘焦点，避免浏览器默认的白色描边。 */
+.reset-btn:focus,
+.awakening-button:focus,
+.opening-btn:focus { outline: none; }
+.reset-btn:focus-visible,
+.awakening-button:focus-visible {
+  box-shadow: 0 0 12px var(--phosphor-primary, #00ff41);
+}
+.opening-btn:focus-visible {
+  animation: none;
+  background: rgba(var(--opening-button-rgb, 0, 255, 0), .15);
+  box-shadow: 0 0 20px rgba(var(--opening-button-rgb, 0, 255, 0), .5),
+    inset 0 0 20px rgba(var(--opening-button-rgb, 0, 255, 0), .1);
 }
 @media (max-height: 500px) {
   .delete-confirm-title { font-size: clamp(36px, 9vh, 60px); margin-bottom: 16px; }
