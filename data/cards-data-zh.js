@@ -2836,7 +2836,7 @@ window.CARDS_DATA = {
           "breakAfter": true
         },
         {
-          "text": "请点击[排序]按钮，然后输入 year 来按年份排序。",
+          "text": "请点击[排序]按钮，然后输入 YEAR 来按年份排序。",
           "style": "default",
           "breakAfter": true
         }

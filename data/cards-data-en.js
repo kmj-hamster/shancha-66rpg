@@ -2819,7 +2819,7 @@ window.CARDS_DATA = {
         }
 ,
         {
-          "text": "If you wish to sort by year, type year in sort mode.",
+          "text": "If you wish to sort by year, type YEAR in sort mode.",
           "style": "default",
           "breakAfter": true
         }
