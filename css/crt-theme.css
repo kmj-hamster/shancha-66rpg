@@ -3,9 +3,6 @@
  * 策略：Wrapper Only + Fixed Width + Thicker Border
  */
 
-/* VT323 等宽复古字体 */
-@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
-
 :root {
     --bezel-color: #222;
     --bg-screen: #031205;
@@ -281,7 +278,7 @@ body {
         2px 2px 4px rgba(0,0,0,0.3),
         inset 0 0 10px rgba(0,0,0,0.05);
     transform: rotate(-2deg);
-    font-family: 'Caveat', 'Ma Shan Zheng', cursive;
+    font-family: 'Bradley Hand', 'Segoe Print', cursive;
     font-size: 14px;
     color: #1a1a1a;
     line-height: 1.4;
@@ -292,6 +289,11 @@ body {
 .ecg-label-zh,
 .ecg-label-en {
     display: none;
+}
+
+/* 中文便签优先使用设备上的楷体；字体由系统提供。 */
+.ecg-label-zh {
+    font-family: 'Kaiti SC', 'STKaiti', 'KaiTi', serif;
 }
 
 /* 中文模式显示中文标签 */
@@ -315,7 +317,7 @@ body.lang-en .ecg-label-en {
 }
 
 .brand-name {
-    font-family: 'Orbitron', sans-serif;
+    font-family: 'Fira Code', monospace;
     font-size: 16px;
     color: #555;
     letter-spacing: 3px;
@@ -323,14 +325,6 @@ body.lang-en .ecg-label-en {
     text-shadow:
         1px 1px 0 #222,
         -1px -1px 0 #444;
-}
-
-.brand-name-cn {
-    font-family: 'Noto Serif SC', serif;
-    font-size: 12px;
-    color: #444;
-    letter-spacing: 6px;
-    margin-top: 4px;
 }
 
 /* 响应式：小屏幕隐藏心电图 */
