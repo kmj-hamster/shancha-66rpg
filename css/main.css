@@ -803,10 +803,6 @@ body.theme-delete .statistics {
   }
 }
 
-.file-item.unlocking {
-  animation: unlock-flash 1s ease-out;
-}
-
 /* 阅读模式样式 */
 /* 注意：不要对body设置pointer-events，否则无法滚动 */
 body.reading-mode .file-item:not(.reading-current) {

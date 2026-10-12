@@ -848,7 +848,7 @@ class MemoryDecayEffect {
         cardManager.updateCardDiscoveredStatus('mem_025', true);
         cardManager.updateCardStatus('mem_025', 'unlocked');
         if (isNewMemory && window.audioManager) {
-            audioManager.playSFX('discover', 0.5, true);
+            audioManager.playSFX('discover', 0.5);
         }
 
         // 切换到memory tab
@@ -1020,7 +1020,7 @@ class MemoryDecayEffect {
             setTimeout(() => {
                 console.log('[BGM] Playing Opening SFX (12s)...');
                 if (window.audioManager) {
-                    audioManager.playSFX('Opening.m4a', 1, true);
+                    audioManager.playSFX('Opening.m4a', 1);
                 }
             }, 2000);
 

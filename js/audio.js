@@ -18,9 +18,6 @@ class AudioManager {
         this.musicFadeIntervals = new Set();
         this.fadingOutMusic = null;
 
-        // 音效缓存
-        this.sfxCache = new Map();
-
         // BGM 预加载缓存
         this.bgmCache = new Map();
         this.preloadProgress = { loaded: 0, total: 0 };
@@ -43,12 +40,9 @@ class AudioManager {
         // 循环淡入淡出播放的状态
         this.loopFadeState = null;
 
-        // 音频路径配置
-        this.basePath = '../assets/audio/';
-        this.sfxPath = this.basePath + 'sfx/';
-        // BGM和自定义音效使用本地路径（GitHub Pages 部署）
+        // BGM和音效统一使用本地路径（GitHub Pages 部署）
         this.musicPath = './sound/';
-        this.customSfxPath = './sound/';
+        this.sfxPath = './sound/';
 
         // iOS 检测（用于简化音频切换逻辑）
         this.isIOS = /iPhone|iPad|iPod/i.test(navigator.userAgent);
@@ -88,16 +82,14 @@ class AudioManager {
 
     /**
      * 播放音效（一次性播放）
-     * @param {string} soundId - 音效ID，如 'unlock', 'click'，或完整文件名如 'discover.mp3'
+     * @param {string} soundId - 音效ID，如 'discover'，或完整文件名如 'Opening.m4a'
      * @param {number} volume - 音量 (0-1)，可选
-     * @param {boolean} useCustomPath - 是否使用自定义路径，可选
      * @returns {HTMLAudioElement} 音频元素（用于需要控制的情况）
      */
-    playSFX(soundId, volume = 1, useCustomPath = false) {
+    playSFX(soundId, volume = 1) {
         console.log(`[AudioManager] playSFX called:`, {
             soundId,
             volume,
-            useCustomPath,
             muted: this.muted
         });
 
@@ -110,12 +102,10 @@ class AudioManager {
             // 创建新的音频实例（允许重叠播放）
             const audio = new Audio();
 
-            // 确定音频路径
-            const basePath = useCustomPath ? this.customSfxPath : this.sfxPath;
             // 检查是否已有扩展名（支持.mp3, .wav, .ogg, .m4a等）
             const hasExtension = /\.(mp3|wav|ogg|m4a)$/i.test(soundId);
             const fileName = hasExtension ? soundId : `${soundId}.m4a`;
-            audio.src = `${basePath}${fileName}`;
+            audio.src = `${this.sfxPath}${fileName}`;
 
             console.log(`[AudioManager] Audio source set to: ${audio.src}`);
 
@@ -974,23 +964,6 @@ class AudioManager {
     }
 
     /**
-     * 预加载音效（可选，用于优化）
-     * @param {Array<string>} soundIds - 音效ID数组
-     */
-    async preloadSFX(soundIds) {
-        for (const id of soundIds) {
-            try {
-                const audio = new Audio();
-                audio.src = `${this.sfxPath}${id}.m4a`;
-                audio.load();
-                this.sfxCache.set(id, audio.src);
-            } catch (err) {
-                console.warn(`Failed to preload: ${id}`, err);
-            }
-        }
-    }
-
-    /**
      * 预加载 BGM 文件（解决首播延迟）
      * @param {Array<string>} musicIds - BGM ID数组
      * @param {Function} onProgress - 进度回调 (loaded, total)
@@ -1057,34 +1030,6 @@ class AudioManager {
     getCachedBGM(musicId) {
         const key = musicId.replace(/\.(mp3|wav|ogg|m4a)$/i, '');
         return this.bgmCache.get(key) || null;
-    }
-
-    /**
-     * 循环播放音效（特殊用途，如环境音）
-     * @param {string} soundId - 音效ID
-     * @param {number} volume - 音量
-     * @returns {Object} 包含stop方法的控制对象
-     */
-    loopSFX(soundId, volume = 1) {
-        if (this.muted) return { stop: () => {} };
-
-        const audio = new Audio();
-        audio.src = `${this.sfxPath}${soundId}.m4a`;
-        audio.loop = true;
-        audio.volume = volume * this.volumes.sfx * this.volumes.master;
-
-        audio.play().catch(err => {
-            console.warn(`Failed to loop sound: ${soundId}`, err);
-        });
-
-        return {
-            audio: audio,
-            stop: () => {
-                audio.pause();
-                audio.currentTime = 0;
-                audio.remove();
-            }
-        };
     }
 
     /**
@@ -1164,15 +1109,6 @@ class AudioManager {
             }
         }, interval);
         this.musicFadeIntervals.add(fade);
-    }
-
-    /**
-     * 设置音频路径（如果需要自定义路径）
-     */
-    setBasePath(path) {
-        this.basePath = path;
-        this.sfxPath = this.basePath + 'sfx/';
-        this.musicPath = this.basePath + 'music/';
     }
 
     /**

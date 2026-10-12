@@ -335,67 +335,12 @@ class UnlockManager {
                     newlyUnlocked.push(cardId);
                     this.gameState.highlightCards([cardId]);
 
-                    // 触发解锁提醒（红→蓝）- 注释掉：游戏启动时不显示提示
-                    // this.notifyCardUnlock(card);
-
                     console.log(`[UnlockManager] Card ${cardId} auto-unlocked (count condition met)`);
                 }
             }
         });
 
         return newlyUnlocked;
-    }
-
-    /**
-     * 通知卡片解锁（红色变蓝色的提醒）
-     * @param {Object} card - 卡片对象
-     */
-    notifyCardUnlock(card) {
-        // 1. 文件项闪烁效果
-        const fileItem = document.querySelector(`[data-card-id="${card.id}"]`);
-        if (fileItem) {
-            fileItem.classList.add('unlocking');
-            setTimeout(() => {
-                fileItem.classList.remove('unlocking');
-                // 更新颜色类
-                fileItem.classList.remove('locked-red');
-                fileItem.classList.add('unread');
-            }, 3000);
-        }
-
-        // 2. 显示反馈消息（根据 card.type 区分 Memory/File）
-        const lang = localStorage.getItem('gameLang') || 'en';
-        const feedbackArea = document.querySelector('.feedback-text');
-        if (feedbackArea) {
-            if (lang === 'zh') {
-                const typeText = card.type === 'file' ? '文件' : '记忆';
-                feedbackArea.textContent = `${typeText}"${card.title}"已可解析`;
-            } else {
-                const typeText = card.type === 'file' ? 'File' : 'Memory';
-                feedbackArea.textContent = `${typeText} "${card.title}" is now parsable`;
-            }
-            feedbackArea.classList.add('highlight');
-            setTimeout(() => {
-                feedbackArea.classList.remove('highlight');
-            }, 3000);
-        }
-
-        // 3. Tab小点脉冲效果
-        const tabBtn = document.querySelector(`.tab-btn[data-type="${card.type}"]`);
-        if (tabBtn) {
-            const dot = tabBtn.querySelector('.unread-dot');
-            if (dot) {
-                dot.classList.add('pulse-strong');
-                setTimeout(() => {
-                    dot.classList.remove('pulse-strong');
-                }, 3000);
-            }
-        }
-
-        // 4. 播放音效（如果音频管理器存在）
-        if (window.audioManager && window.audioManager.playSFX) {
-            window.audioManager.playSFX('unlock');
-        }
     }
 
     /**
@@ -601,7 +546,7 @@ class UnlockManager {
             // 🎵 3. UI刷新后立即播放发现音效（确保视听同步）
             if (window.audioManager) {
                 console.log(`[UnlockManager] Playing discover sound for ${file.id} after UI refresh`);
-                audioManager.playSFX('discover', 0.5, true);
+                audioManager.playSFX('discover', 0.5);
             } else {
                 console.warn(`[UnlockManager] ⚠️ audioManager not available!`);
             }

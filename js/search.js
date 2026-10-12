@@ -107,8 +107,8 @@ class SearchEngine {
                 console.log(`[SearchEngine] Attempting to play discover sound...`);
                 console.log(`[SearchEngine] window.audioManager exists:`, !!window.audioManager);
                 if (window.audioManager) {
-                    console.log(`[SearchEngine] Calling audioManager.playSFX('discover', 0.5, true)`);
-                    audioManager.playSFX('discover', 0.5, true);
+                    console.log(`[SearchEngine] Calling audioManager.playSFX('discover', 0.5)`);
+                    audioManager.playSFX('discover', 0.5);
                 } else {
                     console.warn(`[SearchEngine] ⚠️ audioManager not available!`);
                 }
