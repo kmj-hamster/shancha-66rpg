@@ -546,11 +546,9 @@ class Renderer {
                 <span class="file-name">${clue}</span>
             `;
 
-            // 添加点击事件：填充到输入框（已使用的 clue 不可点击）
-            clueItem.onclick = () => {
-                if (usedClues.includes(clue)) {
-                    return;  // 已使用的 clue 不响应点击
-                }
+            // 搜索过的线索仍可填入终端；不冒泡到文件列表的打开卡片逻辑。
+            clueItem.onclick = event => {
+                event.stopPropagation();
                 if (window.fillClueToInput) {
                     window.fillClueToInput(clue);
                 }

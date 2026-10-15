@@ -22,6 +22,15 @@ function node() {
     };
 }
 
+function clickNode(target) {
+    const event = { target, stopped: false, stopPropagation() { this.stopped = true; } };
+    for (let current = target; current; current = current.parentElement) {
+        current.onclick?.(event);
+        current.dispatch('click', event);
+        if (event.stopped) break;
+    }
+}
+
 function boot(saved, lang = 'zh') {
     const storage = new Map([['gameLang', lang]]), timers = [];
     if (saved) storage.set('gameState', JSON.stringify(saved));
@@ -38,6 +47,7 @@ function boot(saved, lang = 'zh') {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
     }
     const run = source => vm.runInContext(source, context);
+    const refreshUI = run('refreshUI');
     run(`
         gameState = new GameState(); gameState.loadState();
         cardManager = new CardManager(); cardManager.loadCards();
@@ -51,7 +61,7 @@ function boot(saved, lang = 'zh') {
         gameState.saveState(); syncStateToCardManager();
     `);
     return {
-        run, timers, context, document,
+        run, timers, context, document, refreshUI,
         save: () => JSON.parse(storage.get('gameState')),
         open(id) {
             run(`handleFileClick({target:{closest:()=>({getAttribute:()=> '${id}'})}});
@@ -170,14 +180,7 @@ function readingClickFixture() {
         renderer.bindReadingControls(text, hint, controller);
     `);
     // 模拟 DOM 冒泡；线索词自己的 onclick 可以阻止向正文容器传播。
-    h.click = target => {
-        const event = { target, stopped: false, stopPropagation() { this.stopped = true; } };
-        for (let current = target; current; current = current.parentElement) {
-            current.onclick?.(event);
-            current.dispatch('click', event);
-            if (event.stopped) break;
-        }
-    };
+    h.click = clickNode;
     return h;
 }
 
@@ -256,6 +259,83 @@ test('expanded click area respects full-auto playback and input locks', () => {
         assert.equal(h.run('controller.currentIndex'), 0);
     }
 });
+
+for (const lang of ['zh', 'en']) {
+    for (const used of [false, true]) {
+        test(`${lang}: ${used ? 'searched' : 'new'} sidebar clue fills the terminal without opening a memory`, () => {
+            const h = boot({
+                discovered_cards: ['mem_001', 'mem_002'], unlocked_cards: ['mem_001', 'mem_002'],
+                read_cards: ['mem_001', 'mem_002'], current_card: 'mem_002', current_tab: 'clue'
+            }, lang);
+            h.run(`
+                var clueText = cardManager.getCardById('mem_001').unlock_clue;
+                var clueList = document.createElement('div');
+                renderer.renderClueList(clueList, [clueText], ${used} ? [clueText] : []);
+                var clueItem = clueList.children[0];
+                // 保留旧的卡片标题匹配路径，让意外冒泡能在测试中打开记忆。
+                clueItem.getAttribute = () => null;
+                var clueName = document.createElement('span'); clueName.textContent = clueText;
+                clueItem.appendChild(clueName);
+                clueItem.querySelector = () => clueName;
+                clueList.addEventListener('click', handleFileClick);
+                var openedCards = [];
+                displayCard = card => openedCards.push(card.id);
+                var terminalInput = { value: '', focus() {} };
+                document.querySelector = selector => selector === '.input-area .command-input' ? terminalInput : null;
+                window.matchMedia = () => ({ matches: false });
+            `);
+            clickNode(h.run('clueName'));
+            assert.equal(h.run('terminalInput.value'), h.run('clueText'));
+            assert.equal(h.run('selectedClue'), h.run('clueText'));
+            assert.deepEqual(Array.from(h.run('openedCards')), []);
+            assert.equal(h.save().current_card, 'mem_002');
+            assert.equal(h.save().current_tab, 'clue');
+            // 再次点击相同线索依然不跳转。
+            clickNode(h.run('clueName'));
+            assert.deepEqual(Array.from(h.run('openedCards')), []);
+        });
+    }
+
+    for (const tab of ['memory', 'file', 'clue']) {
+        test(`${lang}: reloading ${tab} keeps the tab highlight, list and count in sync`, () => {
+            const h = boot({
+                current_tab: tab, discovered_cards: ['mem_001', 'file_010'],
+                unlocked_cards: ['mem_001', 'file_010'], read_cards: ['mem_001', 'file_010']
+            }, lang);
+            h.run(`
+                memoryDecay = { isActive: false };
+                var tabs = ['memory', 'file', 'clue'].map(type => {
+                    var classes = new Set(type === 'memory' ? ['active'] : []);
+                    return {
+                        getAttribute: () => type,
+                        classList: { add: name => classes.add(name), remove: name => classes.delete(name),
+                            contains: name => classes.has(name) }
+                    };
+                });
+                var fileList = document.createElement('div'), stat = document.createElement('span');
+                document.querySelectorAll = selector => selector === '.tab-btn' ? tabs : [];
+                document.querySelector = selector => selector === '.file-list' ? fileList :
+                    selector === '.stat-number' ? stat : null;
+                var listedCardTypes = [];
+                renderer.renderCardList = (container, cards) => { listedCardTypes = cards.map(card => card.type); };
+            `);
+            h.refreshUI();
+            assert.deepEqual(Array.from(h.run("tabs.map(tab => tab.classList.contains('active'))")),
+                ['memory', 'file', 'clue'].map(type => type === tab));
+            assert.equal(h.save().current_tab, tab);
+            if (tab === 'clue') {
+                assert.equal(h.run('fileList.children.length'), h.save().discovered_clues.length);
+                assert.equal(h.run('stat.textContent'), h.save().discovered_clues.length);
+            } else {
+                const expectedCount = h.run(`gameState.getState().discovered_cards.filter(
+                    id => cardManager.getCardById(id)?.type === '${tab}').length`);
+                assert.ok(expectedCount > 0);
+                assert.deepEqual(Array.from(h.run('listedCardTypes')), Array(expectedCount).fill(tab));
+                assert.equal(h.run('stat.textContent'), expectedCount);
+            }
+        });
+    }
+}
 
 test('unlocking reading UI alone never marks a card read', () => {
     const h = boot();
