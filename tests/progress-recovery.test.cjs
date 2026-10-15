@@ -7,9 +7,15 @@ const vm = require('node:vm');
 function node() {
     const listeners = new Map();
     return {
-        style: {}, dataset: {}, children: [], classList: { add() {}, remove() {}, toggle() {} },
+        style: {}, dataset: {}, children: [], className: '', classList: { add() {}, remove() {}, toggle() {} },
         querySelector() { return null; }, querySelectorAll() { return []; },
-        appendChild(child) { this.children.push(child); },
+        appendChild(child) { this.children.push(child); child.parentElement = this; },
+        closest(selector) {
+            for (let current = this; current; current = current.parentElement) {
+                if (current.className.split(/\s+/).includes(selector.slice(1))) return current;
+            }
+            return null;
+        },
         addEventListener(type, fn) { if (!listeners.has(type)) listeners.set(type, new Set()); listeners.get(type).add(fn); },
         removeEventListener(type, fn) { listeners.get(type)?.delete(fn); },
         dispatch(type, event) { for (const fn of [...(listeners.get(type) || [])]) fn(event); }
@@ -143,6 +149,112 @@ test('Enter and click use the same completion path; stale key listeners are remo
     h.run("renderer.setCurrentCard('mem_002')");
     h.document.dispatch('keydown', { key: 'Enter', target: { matches: () => false }, preventDefault() {} });
     assert.equal(h.save().read_cards.includes('mem_002'), false);
+});
+
+function readingClickFixture() {
+    const h = boot({ discovered_cards: ['mem_001'], unlocked_cards: ['mem_001'] });
+    h.open('mem_001');
+    h.run(`
+        var pane = document.createElement('div'); pane.className = 'card-content-area';
+        var title = document.createElement('div'); title.className = 'title-bar'; pane.appendChild(title);
+        var scroll = document.createElement('div'); scroll.className = 'card-scroll'; pane.appendChild(scroll);
+        var text = document.createElement('div'); scroll.appendChild(text);
+        var paragraph = document.createElement('p'); text.appendChild(paragraph);
+        var hint = document.createElement('p'); text.appendChild(hint);
+        var sidebar = document.createElement('div');
+        var terminal = document.createElement('div');
+        var advances = 0;
+        var controller = renderer.lineByLineController;
+        var originalShowNext = controller.showNext.bind(controller);
+        controller.showNext = () => { advances++; originalShowNext(); };
+        renderer.bindReadingControls(text, hint, controller);
+    `);
+    // 模拟 DOM 冒泡；线索词自己的 onclick 可以阻止向正文容器传播。
+    h.click = target => {
+        const event = { target, stopped: false, stopPropagation() { this.stopped = true; } };
+        for (let current = target; current; current = current.parentElement) {
+            current.onclick?.(event);
+            current.dispatch('click', event);
+            if (event.stopped) break;
+        }
+    };
+    return h;
+}
+
+for (const target of ['pane', 'title', 'scroll', 'paragraph', 'hint']) {
+    test(`clicking ${target} inside the upper-right panel advances exactly once`, () => {
+        const h = readingClickFixture();
+        h.click(h.run(target));
+        assert.equal(h.run('advances'), 1);
+        assert.ok(h.save().read_cards.includes('mem_001'));
+        assert.equal(h.run('hint.style.display'), 'none');
+    });
+}
+
+test('sidebar and terminal clicks do not advance reading', () => {
+    const h = readingClickFixture();
+    h.click(h.run('sidebar'));
+    h.click(h.run('terminal'));
+    assert.equal(h.run('advances'), 0);
+    assert.equal(h.save().read_cards.includes('mem_001'), false);
+});
+
+for (const locked of [false, true]) {
+    test(`clue clicks preserve selection and do not advance reading (locked=${locked})`, () => {
+        const h = readingClickFixture();
+        h.run(`
+            var selectedClues = [], filledClues = [];
+            memoryDecay = { isActive: false };
+            window.readingLockManager = { isLocked: () => ${locked} };
+            window.switchToClueTab = clue => selectedClues.push(clue);
+            window.fillClueToInput = clue => filledClues.push(clue);
+            var clue = renderer.createTextElement({ text: '向日葵', style: 'clue' });
+            paragraph.appendChild(clue);
+        `);
+        h.click(h.run('clue'));
+        assert.equal(h.run('advances'), 0);
+        assert.deepEqual(Array.from(h.run('selectedClues')), locked ? [] : ['向日葵']);
+        assert.deepEqual(Array.from(h.run('filledClues')), locked ? [] : ['向日葵']);
+    });
+}
+
+test('nested clue content is excluded even when its event reaches the panel', () => {
+    const h = readingClickFixture();
+    h.run(`
+        var clue = document.createElement('span'); clue.className = 'clue-word'; paragraph.appendChild(clue);
+        var clueChild = document.createElement('span'); clue.appendChild(clueChild);
+    `);
+    h.click(h.run('clueChild'));
+    assert.equal(h.run('advances'), 0);
+});
+
+test('changing cards removes the panel listener and binds the next controller only once', () => {
+    const h = readingClickFixture();
+    h.run("renderer.setCurrentCard('mem_002')");
+    h.click(h.run('pane'));
+    assert.equal(h.run('advances'), 0);
+    h.run(`
+        var newController = renderer.createReadingController(
+            [document.createElement('p'), document.createElement('p')], { id: 'mem_002' });
+        var newAdvances = 0;
+        var newShowNext = newController.showNext.bind(newController);
+        newController.showNext = () => { newAdvances++; newShowNext(); };
+        renderer.bindReadingControls(text, hint, newController);
+    `);
+    h.click(h.run('title'));
+    assert.equal(h.run('advances'), 0);
+    assert.equal(h.run('newAdvances'), 1);
+    assert.equal(h.run('newController.currentIndex'), 1);
+});
+
+test('expanded click area respects full-auto playback and input locks', () => {
+    for (const flag of ['fullAutoPlayMode', 'blockInput']) {
+        const h = readingClickFixture();
+        h.run(`controller.${flag} = true`);
+        h.click(h.run('pane'));
+        assert.equal(h.save().read_cards.includes('mem_001'), false);
+        assert.equal(h.run('controller.currentIndex'), 0);
+    }
 });
 
 test('unlocking reading UI alone never marks a card read', () => {

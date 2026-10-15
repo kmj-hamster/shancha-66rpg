@@ -423,6 +423,8 @@ class Renderer {
     }
 
     bindReadingControls(container, continueHint, controller) {
+        // 使用分割线围出的整个右上正文区，包括标题、滚动区和空白处。
+        const clickArea = container.closest?.('.card-content-area') || container;
         const advance = () => {
             if (this.lineByLineController !== controller || controller.disposed || controller.fullAutoPlayMode) return;
             controller.showNext();
@@ -438,10 +440,15 @@ class Renderer {
                 controller.skipAutoSequence();
             }
         };
-        container.addEventListener('click', advance);
+        const click = event => {
+            // 线索词只执行原有的选词行为，不推进阅读。
+            if (event.target?.closest?.('.clue-word')) return;
+            advance();
+        };
+        clickArea.addEventListener('click', click);
         document.addEventListener('keydown', keyboard);
         controller.cleanupInputEvents = () => {
-            container.removeEventListener('click', advance);
+            clickArea.removeEventListener('click', click);
             document.removeEventListener('keydown', keyboard);
         };
     }
