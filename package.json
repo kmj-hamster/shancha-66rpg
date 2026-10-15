@@ -4,9 +4,11 @@
     "test": "node --test tests/*.test.cjs"
   },
   "devDependencies": {
-    "@66rpg/lumimaker": "^0.1.54"
+    "@66rpg/lumimaker": "^0.1.55",
+    "@66rpg/lumimaker-create": "^0.1.55",
+    "@66rpg/lumimaker-win32-x64": "^0.1.55"
   },
   "name": "山茶",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "我被困在八月三十一日的向日葵花田……"
 }
