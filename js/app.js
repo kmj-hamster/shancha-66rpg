@@ -1826,6 +1826,8 @@ function triggerUnlockFlash(cardIds) {
  * @param {boolean} scrollListToBottom - 是否滚动列表到底部（默认true）
  */
 function refreshUI(scrollListToBottom = true) {
+    // 读档和程序化刷新都以存档中的 Tab 为准，保持高亮与列表内容一致。
+    updateTabUI(gameState.getState().current_tab);
     refreshFileList(scrollListToBottom);
     refreshStatistics();
     updateCommandHelp();  // 更新指令帮助区域（P4.1 已移除，保留兼容）
