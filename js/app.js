@@ -299,7 +299,7 @@ function initUIText() {
 
 // 🎵 卡片BGM映射表：卡片ID -> BGM文件名
 const CARD_BGM_MAP = {
-    'mem_003': 'Memory',        // 初次点击mem_003时播放Memory
+    'mem_001': 'Memory',        // 初次阅读“咖啡”时播放Memory
     'mem_023': 'Atmosphere',    // 初次点击mem_023时切换到Atmosphere
     'file_018': 'Dream',        // 点击file_018时切换到Dream
     'file_015': 'Atmosphere',   // 点击file_015时切换到Atmosphere
@@ -310,7 +310,7 @@ const CARD_BGM_MAP = {
 };
 
 // 🎵 仅首次触发BGM的卡片列表
-const FIRST_TIME_ONLY_BGM = ['mem_003', 'mem_012', 'mem_015', 'mem_009', 'mem_023'];
+const FIRST_TIME_ONLY_BGM = ['mem_001', 'mem_012', 'mem_015', 'mem_009', 'mem_023'];
 
 /**
  * 同步gameState到cardManager
