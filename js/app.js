@@ -72,20 +72,39 @@ function detectAndroidBrowser() {
     return 'other';
 }
 
-// 安卓端请求全屏（改进版 - PWA 模式下也尝试）
-function requestFullscreenOnAndroid() {
-    if (!isAndroid()) return;
-    if (isFullscreen()) return;  // 已全屏则跳过
+// 必须在点击/按键回调中直接调用，保留浏览器的用户手势。
+function requestGameFullscreen() {
+    const sdk = window.LumiMakerSdk;
+    try {
+        if (sdk) {
+            // 平台全屏的是播放器外壳，不能用游戏文档的全屏状态判断。
+            return Promise.resolve(sdk.requestFullscreen()).then(() => true, () => false);
+        }
 
-    const elem = document.documentElement;
-    const requestFS = elem.requestFullscreen || elem.webkitRequestFullscreen;
-
-    if (requestFS) {
-        requestFS.call(elem, { navigationUI: 'hide' }).catch(err => {
-            console.log('[Fullscreen] Request denied:', err);
-        });
+        if (isFullscreen()) return Promise.resolve(true);
+        const elem = document.documentElement;
+        const requestFS = elem.requestFullscreen || elem.webkitRequestFullscreen;
+        if (!requestFS) return Promise.resolve(false);
+        return Promise.resolve(requestFS.call(elem, { navigationUI: 'hide' }))
+            .then(() => true, () => false);
+    } catch (err) {
+        // 不支持全屏或拒绝全屏时，仍允许正常游玩。
+        return Promise.resolve(false);
     }
 }
+
+// 自动全屏只跟随玩家第一次真实点击，与开场动画、读档和应用初始化解耦。
+function handleFirstPlayerClick(event) {
+    if (!event.isTrusted) return;
+    document.removeEventListener('click', handleFirstPlayerClick, true);
+
+    // 手动全屏按钮自身会处理请求，避免同一次点击重复调用。
+    if (event.target?.closest?.('.func-btn[data-mode="fullscreen"]')) return;
+    if (window.LumiMakerSdk || isAndroid()) requestGameFullscreen();
+}
+
+// 捕获阶段处理，线索词等控件停止冒泡也不会丢失首次点击。
+document.addEventListener('click', handleFirstPlayerClick, true);
 
 // 页面加载时检测平台并添加 class
 function detectPlatform() {
@@ -114,7 +133,7 @@ window.isPWA = isPWA;
 window.isFullscreen = isFullscreen;
 window.getDisplayMode = getDisplayMode;
 window.detectAndroidBrowser = detectAndroidBrowser;
-window.requestFullscreenOnAndroid = requestFullscreenOnAndroid;
+window.requestGameFullscreen = requestGameFullscreen;
 window.detectPlatform = detectPlatform;
 
 // 模式状态管理
@@ -259,10 +278,12 @@ function initUIText() {
     const resetBtn = document.querySelector('[data-mode="reset"]');
     const sortBtn = document.querySelector('[data-mode="sort"]');
     const deleteBtn = document.querySelector('[data-mode="delete"]');
+    const fullscreenBtn = document.querySelector('[data-mode="fullscreen"]');
     if (searchBtn) searchBtn.textContent = '[搜索]';
     if (resetBtn) resetBtn.textContent = '[重置]';
     if (sortBtn) sortBtn.textContent = '[排序]';
     if (deleteBtn) deleteBtn.textContent = '[删除]';
+    if (fullscreenBtn) fullscreenBtn.textContent = '[全屏]';
 
     // 统计信息
     const statsLabel = document.querySelector('.statistics p');
@@ -638,13 +659,19 @@ function initFunctionBar() {
  * 处理状态按钮点击（P4.6）
  */
 function handleFuncBtnClick(event) {
+    const btn = event.currentTarget || event.target;
+    const mode = btn.dataset.mode;
+
+    // 全屏属于播放器操作，阅读锁定时也可使用，不改变当前玩法模式。
+    if (mode === 'fullscreen') {
+        requestGameFullscreen();
+        return;
+    }
+
     // 检查是否处于阅读锁定状态
     if (readingLockManager && readingLockManager.isLocked()) {
         return;
     }
-
-    const btn = event.target;
-    const mode = btn.dataset.mode;
 
     // 忽略锁定的按钮
     if (btn.classList.contains('locked')) {

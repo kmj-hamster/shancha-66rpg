@@ -1,7 +1,8 @@
 node_modules/
 /.codex/
-/package.json
 /package-lock.json
+/dist/
+/release/
 
 # Local editor settings and historical backups
 /.claude/

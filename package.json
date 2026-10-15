@@ -1,0 +1,12 @@
+{
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test tests/*.test.cjs"
+  },
+  "devDependencies": {
+    "@66rpg/lumimaker": "^0.1.54"
+  },
+  "name": "山茶",
+  "version": "1.0.0",
+  "description": "我被困在八月三十一日的向日葵花田……"
+}

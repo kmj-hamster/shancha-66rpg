@@ -465,6 +465,17 @@ body.reading-mode .system-output.awakening-progress-mode {
   opacity: 0.9;
 }
 
+button.func-btn {
+  background: none;
+  border: 0;
+  font-family: inherit;
+}
+
+/* 播放器操作在阅读期间仍可点击。 */
+.func-btn[data-mode="fullscreen"] {
+  pointer-events: auto;
+}
+
 .func-btn.active {
   background: var(--phosphor-dim, #4e9c4e); /* P4 修复：降低亮度 */
   color: #000;

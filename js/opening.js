@@ -188,11 +188,6 @@ class OpeningScreen {
 
     console.log('Login clicked, starting transition...')
 
-    // 📱 安卓端请求全屏
-    if (window.requestFullscreenOnAndroid) {
-      window.requestFullscreenOnAndroid()
-    }
-
     // 🎵 播放Opening音效
     if (window.audioManager) {
       console.log('[BGM] Playing Opening SFX (12s)...')
