@@ -21,7 +21,7 @@ function boot(ios = false) {
         playing() { return audios.filter(a=>!a.paused); }};
 }
 for (const ios of [false, true]) {
-    test(`red click and saved BGM restoration cannot duplicate playback (iOS=${ios})`, () => {
+    test(`coffee click and saved BGM restoration cannot duplicate playback (iOS=${ios})`, () => {
         const h = boot(ios); h.m.switchMusic('Memory',2000); h.m.restoreMusic('Memory'); h.tick();
         assert.equal(h.playing().length, 1);
         h.m.switchMusic('Mozart.m4a',2000); h.tick();

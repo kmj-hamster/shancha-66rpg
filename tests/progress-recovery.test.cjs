@@ -573,6 +573,47 @@ for (const lang of ['zh', 'en']) {
     });
 }
 
+for (const lang of ['zh', 'en']) {
+    test(`${lang}: Memory starts at coffee; rereading coffee and opening red preserve later music`, () => {
+        const h = boot({
+            discovered_cards: ['mem_001'], unlocked_cards: ['mem_001'], current_bgm: 'Atmosphere'
+        }, lang);
+        h.run(`
+            var musicCalls = [];
+            window.audioManager = {
+                currentMusicId: 'Atmosphere',
+                switchMusic(id, duration) { musicCalls.push([id, duration]); this.currentMusicId = id; }
+            };
+            memoryDecay = { isActive: false };
+            displayCard(cardManager.getCardById('mem_001'));
+            displayCard(cardManager.getCardById('mem_001'));
+        `);
+        assert.deepEqual(Array.from(h.run('musicCalls'), call => Array.from(call)), [['Memory', 2000]]);
+        assert.equal(h.save().current_bgm, 'Memory');
+        h.run(`
+            gameState.completeCardReading('mem_001', cardManager.getAllCards(), COMMAND_UNLOCK_MAP);
+            syncStateToCardManager();
+            audioManager.currentMusicId = 'Mozart.m4a';
+            gameState.setCurrentBGM('Mozart.m4a');
+            displayCard(cardManager.getCardById('mem_001'));
+            displayCard(cardManager.getCardById('mem_003'));
+        `);
+        assert.equal(h.run('musicCalls.length'), 1);
+        assert.equal(h.save().current_bgm, 'Mozart.m4a');
+
+        const restored = boot(h.save(), lang);
+        restored.run(`
+            var musicCalls = [];
+            window.audioManager = { currentMusicId: 'Mozart.m4a', switchMusic: id => musicCalls.push(id) };
+            memoryDecay = { isActive: false };
+            displayCard(cardManager.getCardById('mem_001'));
+            displayCard(cardManager.getCardById('mem_003'));
+        `);
+        assert.equal(restored.run('musicCalls.length'), 0);
+        assert.equal(restored.save().current_bgm, 'Mozart.m4a');
+    });
+}
+
 for (const phase of ['deletion2', 'decay']) {
     test(phase + ': opening any music-triggering file cannot interrupt story BGM', () => {
         const h = boot({story_phase: phase, current_bgm: 'Error.m4a'});
